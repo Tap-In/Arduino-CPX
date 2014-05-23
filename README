@@ -1,0 +1,14 @@
+This is a cloud-based controller for the Arduino using the
+Tap In Control Plan cloud based controller. An intermediate level
+of working with the Arduino is assumed by this document.
+
+Be aware that the WiFi shield and the RFID reader uses the same
+MOSI pin, so, unless you know how to modify the hardware to change
+the MOSI pins, use the RFID example with the USB based proxy.
+
+This code is compiled to use the Arduino Mega, if you use another Arduino
+board, you will need to make the appropriate modifications.
+
+Enjoy,
+
+Tap In Systems
