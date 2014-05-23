@@ -1,30 +1,40 @@
+
+/*
+    This program is free software: you can redistribute it and/or modify it under the 
+    terms of the GNU General Public License as published by the Free Software Foundation, 
+    either version 3 of the License, or (at your option) any later version.
+    
+    This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; 
+    without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+    See the GNU General Public License for more details.
+    
+    You should have received a copy of the GNU General Public License along with this program.  
+    If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <WiFiServer.h>
 #include <WiFiClient.h>
 
 
-
 #include <MFRC522.h>
+#include <SPI.h>
 
 #include <JsonArray.h>
 #include <JsonParser.h>
 #include <JsonObjectBase.h>
 #include <JsonHashTable.h>
 
-#include <SPI.h>
-
 #define WIFI   0
 #define PROXY  1
-
-////////////////////////////////////////////////////////
 
 #define INTERFACE_TYPE PROXY
 
 // If proxy these will be ignored
 #define IPADDRESS            192.168.0.1
 #define MACADDRESS           de.ad.be.ef
-#define CONTROL_PLAN_ADDR    192,168,0,10
+#define CONTROL_PLAN_ADDR    50,16,114,126
 #define CONTROL_PLAN_PORT    8080
 #define AUTHKEY              "555-1212"
 #define SSID                 "SuperiorData"
@@ -32,19 +42,20 @@
 
 ////////////////////////////////////////////////////////
 
+/* Function prototype for user created methods */
 typedef struct
 {
     char name[16];
     int (*functionPtr)(char*,char*);
 } callTYPE;
 int nFuncs = 0;
+char* testme(char*);           // a sample internal function
+callTYPE functions[8];         // a list of 8 possible functions
 
 int interface = INTERFACE_TYPE;
-IPAddress server(CONTROL_PLAN_ADDR);  // Google
-WiFiClient client;
+IPAddress server(CONTROL_PLAN_ADDR);  
 
-char* testme(char*);
-callTYPE functions[8];
+WiFiClient client;
 
 #define SS_PIN 53
 #define RST_PIN 5
@@ -53,11 +64,15 @@ MFRC522 mfrc522(SS_PIN, RST_PIN);	// Create MFRC522 instance.
 
 JsonParser<128> parser;
 JsonHashTable hashTable;
-//char json[512] = {"{\"map\":{\"command\":\"digitalwrite\",\"pin\":7,\"value\":1}}"};
+
+char iprint[512] = {"{\"iprint\":\"%s\"}"};
 char temp[512] = {"{\"map\":{\"value\":\"%s\"},\"globals\":[]}"};
 char tempn[512] = {"{\"map\":{\"value\":\"%d\"},\"globals\":[]}"};
 char err[512] = {"{\"map\":{\"error\":true,\"value\":\"%s\"},\"globals\":[]}"};
 
+/*
+ * Internal functions of the CPX
+ */
 void doWiFi();
 void transmit(char* buf);
 int findFunction(char* name);
@@ -87,7 +102,7 @@ void setup() {
 
 void doWiFi() {
    int status;
-    // check for the presence of the shield:
+  // check for the presence of the shield:
   if (WiFi.status() == WL_NO_SHIELD) {
     Serial.println("WiFi shield not present");
     // don't continue:
@@ -132,6 +147,9 @@ void doWiFi() {
   }
 }
 
+/*
+ * Read commands from Control Plan
+ */
 void loop() {
   char *json;
   char command[32];
@@ -182,6 +200,9 @@ void loop() {
   
 }
 
+/*
+ * Call an internal function by name, the 'call' method
+ */
 int findFunction(char* name) {
   for (int i=0;i<nFuncs;i++) {
      if (strcmp(name,functions[i].name)==0)
@@ -189,6 +210,10 @@ int findFunction(char* name) {
   }
   return -1;
 }
+
+/*
+ * Find the label specified in the goto construct
+ */
 int findIndex(char* label,JsonArray commands) {
     int pc = 0;
     char* what;
@@ -202,6 +227,9 @@ int findIndex(char* label,JsonArray commands) {
     return -1;
 }
 
+/*
+ * Execute the command specified
+ */
 void doCommand(char* returns, JsonHashTable json, char* text) { 
   char* command;
   int v1, v2;
@@ -269,6 +297,11 @@ void doCommand(char* returns, JsonHashTable json, char* text) {
     sendCPmessage(auth, plan, value, returns, wait);
     sprintf(returns,temp,returns);
   }
+ else
+    if (strcmp(command,"print")==0) {
+    char* value = json.getString("value");
+    sprintf(returns,iprint,value);
+  }
   else
   if (strcmp(command,"call")==0) {
     char* fname = json.getString("function");
@@ -287,10 +320,9 @@ void doCommand(char* returns, JsonHashTable json, char* text) {
   }
 }
 
-
-
 /*
- * Read first 4 bytes, convert to a number, how many bytes follow
+ * Read first 4 bytes, convert to a number, which is how many bytes follow.
+ * For example XXX9{"a":"b"}
  */
 char* readBlock() {
   char len[4];
@@ -326,7 +358,8 @@ char* readBlock() {
 
 /*
  * Encode a buffer, puts 4 byte length of trailing buffer leading 0 is X and
- * and appends the rest of the buffer
+ * and appends the rest of the buffer. For example {"a":"b"} is
+ * encoded to: XXX9{"a":"b"}
  */
  
 char* encode(char* data) {
@@ -346,7 +379,42 @@ char* encode(char* data) {
    return newData;
 }
 
-/////////////////////////////////////////////////////
+/*
+ * A demonstration function for use with the 'call' command.
+ */
+int testme(char* rets, char* param) {
+    strcpy(rets,"You have arrived");
+    return 1;
+}
+
+/*
+ * Send an unsolicited message to control plan
+ */
+void sendCPmessage(char* auth, char* plan, char* value, char* returns, int wait) {
+  char* buf = (char*)malloc(sizeof(char)*512);
+  sprintf(buf,"{\“map\”:{\“command\”:\”notify\”,\”auth\”,\”%s\”,\”plan\”:”%s\”,\“value\”: \“%s\”}}",
+    auth,plan,value);
+  encode(buf);
+  transmit(buf);
+  char* json = readBlock();
+  strcpy(returns,json);
+  free(json);
+}
+
+
+/*
+ * Send the response to either Serial or to the Wifi shield, depending
+ * on how you have it set up.
+ */
+void transmit(char* buf) {
+   if (interface == PROXY) {
+     Serial.print(buf);
+   } else {
+     client.print(buf);
+   }
+}
+
+////////////////////// ARDUINO HARDWARE COMMANDS ///////////////////////////////
 
 void setDigitalValue(int pin, int value) {
    digitalWrite(pin,value);   
@@ -390,27 +458,4 @@ int getRfid(char *data) {
    return 1;
 }
 
-int testme(char* rets, char* param) {
-    strcpy(rets,"You have arrived");
-    return 1;
-}
-
-void sendCPmessage(char* auth, char* plan, char* value, char* returns, int wait) {
-  char* buf = (char*)malloc(sizeof(char)*512);
-  sprintf(buf,"{\“map\”:{\“command\”:\”notify\”,\”auth\”,\”%s\”,\”plan\”:”%s\”,\“value\”: \“%s\”}}",
-    auth,plan,value);
-  encode(buf);
-  transmit(buf);
-  char* json = readBlock();
-  strcpy(returns,json);
-  free(json);
-}
-
-void transmit(char* buf) {
-   if (interface == PROXY) {
-     Serial.print(buf);
-   } else {
-     client.print(buf);
-   }
-}
     
