@@ -375,7 +375,6 @@ char* encode(char* data) {
    len[5] = 0;
    strcpy(newData,len);
    strcat(newData,data);
-   free(data);
    return newData;
 }
 
