@@ -194,9 +194,10 @@ void loop() {
       doCommand(returns,hashTable,label);
   }
     
-  json = encode(returns);
-  transmit(json);
+  char* send = encode(returns);
+  transmit(send);
   free(json);
+  free(send);
   
 }
 
