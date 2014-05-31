@@ -70,6 +70,7 @@ char temp[512] = {"{\"map\":{\"value\":\"%s\"},\"globals\":[]}"};
 char tempn[512] = {"{\"map\":{\"value\":\"%d\"},\"globals\":[]}"};
 char err[512] = {"{\"map\":{\"error\":true,\"value\":\"%s\"},\"globals\":[]}"};
 
+
 /*
  * Internal functions of the CPX
  */
@@ -80,6 +81,7 @@ void doCommand(char* returns, JsonHashTable json, char* label);
 int findIndex(char* label,JsonArray commands);
 char* encode(char* data);
 char* readBlock();
+void setPinMode(int pin, int value);
 void setDigitalValue(int pin, int value);
 int getDigitalValue(int pin);
 void setAnalogValue(int pin, int value);
@@ -103,6 +105,33 @@ void setup() {
     sprintf(returns,iprint,"CPX .1 started");
     Serial.write(returns);
   }
+  
+  pinMode(7,OUTPUT);
+  pinMode(8,OUTPUT);
+  pinMode(9,OUTPUT);
+  pinMode(10,OUTPUT);
+  
+/*
+ * Comment out if you don't want the light show on Peter's fun box
+ */
+  int mode = 1;
+  for (int i=0;i<6;i++) {
+    digitalWrite(7,!mode);
+    digitalWrite(8,!mode);
+    digitalWrite(9,!mode);
+    digitalWrite(10,mode);
+    delay(1000);
+    if (mode == 1)
+      mode = 0;
+    else
+      mode = 1;
+      
+  }
+  digitalWrite(7,0);
+  digitalWrite(8,0);
+  digitalWrite(9,0);
+  digitalWrite(10,0);
+/************************************************************/
 }
 
 void doWiFi() {
@@ -420,6 +449,10 @@ void transmit(char* buf) {
 }
 
 ////////////////////// ARDUINO HARDWARE COMMANDS ///////////////////////////////
+
+void setPinMode(int pin, int value) {
+  pinMode(pin,value);
+}
 
 void setDigitalValue(int pin, int value) {
    digitalWrite(pin,value);   
