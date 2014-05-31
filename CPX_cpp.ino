@@ -87,6 +87,7 @@ int getAnalogValue(int pin);
 int getRfid(char *data);
 
 void setup() {
+  char returns[128];
   strcpy(functions[0].name,"testme");
   functions[0].functionPtr = testme;
   nFuncs++;
@@ -97,6 +98,10 @@ void setup() {
   
   if (interface == WIFI) {
      doWiFi(); 
+     Serial.println("CPX .1 started");
+  } else {
+    sprintf(returns,iprint,"CPX .1 started");
+    Serial.write(returns);
   }
 }
 

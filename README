@@ -1,13 +1,23 @@
 This is a cloud-based controller for the Arduino using the
-Tap In Control Plan cloud based controller. An intermediate level
-of working with the Arduino is assumed by this document.
+Tap In Control Plan . An intermediate level
+of skill in working with the Arduino is assumed by this project.
 
-Be aware that the WiFi shield and the RFID reader uses the same
-MOSI pin, so, unless you know how to modify the hardware to change
-the MOSI pins, use the RFID example with the USB based proxy.
+Be aware that the WiFi shield and the RFID reader use the same
+SPI SS (Slave Select) pin, so, unless you know how to modify the 
+hardware to change the  pins, use the RFID example with 
+the USB based proxy.
 
-This code is compiled to use the Arduino Mega, if you use another Arduino
-board, you will need to make the appropriate modifications.
+The CPX code sets SPI SS to pin 53,  and Reset is on pin 5.
+
+If using the RFID example, make sure you connect the Reset pin
+of the RFID shield to pin 5 on the Arduino. Otherwise, if you
+leave it dangling, the RFID will read once and then will time out. The 
+reader is reset after every read, and if the reader doesn't get the signal
+the subsequent reads will fail.
+
+This code is written and compiled for use the Arduino Mega.
+If you use another Arduino board, you will need to make the 
+appropriate modifications to the software.
 
 Enjoy,
 
