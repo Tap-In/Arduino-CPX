@@ -97,18 +97,11 @@ void setup() {
   SPI.begin();
   mfrc522.PCD_Init();	// Init MFRC522 card
   
-  if (interface == WIFI) {
-     doWiFi(); 
-     Serial.println("CPX .1 started");
-  } else {
-    sprintf(returns,iprint,"CPX .1 started");
-    Serial.write(returns);
-  }
-  
   pinMode(7,OUTPUT);
   pinMode(8,OUTPUT);
   pinMode(9,OUTPUT);
   pinMode(10,OUTPUT);
+  
   
 /*
  * Comment out if you don't want the light show on Peter's fun box
@@ -131,6 +124,15 @@ void setup() {
   digitalWrite(9,0);
   digitalWrite(10,0);
 /************************************************************/
+ if (interface == WIFI) {
+     doWiFi(); 
+     Serial.println("CPX .1 started");
+  } else {
+    sprintf(returns,iprint,"CPX .1 started");
+    char *send = encode(returns);
+    Serial.write(send);
+    free(send);
+  }
 }
 
 void doWiFi() {
@@ -195,6 +197,11 @@ void loop() {
   JsonArray commands = hashTable.getArray("commands");
   if (commands.success()) {
     pc = 0;
+    sprintf(returns,temp,"ok");
+    char* send = encode(returns);
+    transmit(send);                 // ack command block
+    free(send);
+   
     while(pc < commands.getLength()) {
         label[0] = 0;
         if (interface == PROXY) {
@@ -207,6 +214,7 @@ void loop() {
         } else {
           if (client.available()) {
               json = readBlock();
+              hashTable = parser.parseHashTable(json);
               hashTable = hashTable.getHashTable("map");
               doCommand(returns,hashTable,label);
               break;
