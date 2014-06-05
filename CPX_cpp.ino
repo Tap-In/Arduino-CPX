@@ -41,6 +41,13 @@
 
 ////////////////////////////////////////////////////////
 
+typedef struct {
+    char label[16];
+    int count;
+} jumpTYPE;
+jumpTYPE jumps[8];
+
+int nJumps = 0;
 /* Function prototype for user created methods */
 typedef struct
 {
@@ -73,6 +80,7 @@ char err[512] = {"{\"map\":{\"error\":true,\"value\":\"%s\"},\"globals\":[]}"};
 /*
  * Internal functions of the CPX
  */
+int getJumpCount(char* label);
 void doWiFi();
 void transmit(char* buf);
 int findFunction(char* name);
@@ -191,6 +199,7 @@ void loop() {
   char returns[512];
   char label[32];
   int v1, v2, pc;
+  nJumps = 0;
   json = readBlock();
   JsonHashTable hashTable = parser.parseHashTable(json);
   hashTable = hashTable.getHashTable("map");
@@ -326,7 +335,23 @@ void doCommand(char* returns, JsonHashTable json, char* text) {
   else
   if (strcmp(command,"goto")==0) {
     char* label = json.getString("where");
-    strcpy(text,label);
+    if (json.containsKey("count")) {
+      int count = json.getLong("count");
+      int k = getJumpCount(label);
+      if (k == -1) {
+        k = count - 1;
+        strcpy(jumps[nJumps].label,label);
+        jumps[nJumps].count = k;
+        nJumps++;
+      }
+      if (k > 1) 
+        strcpy(text,label);
+      else
+        text[0]=0;
+    }
+    else {
+      text[0] = 0;
+    }
     sprintf(returns,temp,"ok");
   }
   else
@@ -360,6 +385,14 @@ void doCommand(char* returns, JsonHashTable json, char* text) {
   else {
      sprintf(returns,err,"unknown command"); 
   }
+}
+
+int getJumpCount(char* label) {
+  for (int i=0;i<nJumps;i++) {
+    if (strcmp(label,jumps[i].label)==0)
+      return jumps[i].count--;
+  }
+  return -1;
 }
 
 /*
