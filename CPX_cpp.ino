@@ -12,10 +12,8 @@
 */
 
 #include <WiFi.h>
-#include <WiFiUdp.h>
-#include <WiFiServer.h>
 #include <WiFiClient.h>
-
+#include <WiFiServer.h>
 
 #include <MFRC522.h>
 #include <SPI.h>
