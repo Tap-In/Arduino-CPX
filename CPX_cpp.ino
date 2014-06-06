@@ -350,7 +350,8 @@ void doCommand(char* returns, JsonHashTable json, char* text) {
         text[0]=0;
     }
     else {
-      text[0] = 0;
+      strcpy(text,label);
+      
     }
     sprintf(returns,temp,"ok");
   }
@@ -515,11 +516,11 @@ int getRfid(char *data) {
   data[0] = 0;
   int startTime = millis();
   while ( ! (mfrc522.PICC_IsNewCardPresent())) {
-      if ((millis() - startTime) > 20000) {
+/*      if ((millis() - startTime) > 20000) {
            //mfrc522.PICC_HaltA();  
            //return 0;
            break;
-      }   
+      }    */
   }
   
   if (!mfrc522.PICC_ReadCardSerial())
