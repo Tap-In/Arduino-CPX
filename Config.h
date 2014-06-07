@@ -12,6 +12,10 @@
 
 //////////////////////////////////////////////
 
+
+#define SS_PIN 53
+#define RST_PIN 5
+
 #define WIFI   0
 #define PROXY  1
 

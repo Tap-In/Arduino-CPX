@@ -19,9 +19,11 @@ extern WiFiClient client;
 extern int nJumps;
 extern int nLang;
 extern int nFuncs;
+extern int nSym;
 extern jumpTYPE jumps[];
 extern langTYPE lang[];
 extern callTYPE functions[];  
+extern symbolTYPE symbols[];
 extern int getRfid(char *data);
 
 void ping(char* returns, JsonHashTable json, char* text) { 
@@ -156,6 +158,127 @@ int getJumpCount(char* label) {
   return -1;
 }
 
+void getimage(char* returns, JsonHashTable json, char* text) { 
+  char* name = json.getString("name");
+  int tSize;
+  int k = findSymbol(name);
+  byte* bvalue;
+  int* ivalue;
+  double* dvalue;
+  char array[1024];
+  
+  if (k == -1) {
+    sprintf(returns,err,"unknown symbol");
+    return;
+  }
+  int start = json.getLong("start");
+  int stop  = json.getLong("stop");
+  char value[16];
+  int *imemory = (int*)&symbols[k].memory[start*getSize(symbols[k].type)];
+  byte *bmemory = (byte*)&symbols[k].memory[start*getSize(symbols[k].type)];
+  strcpy(array,"[");
+  for (int i = 0; i<stop;i++) {
+    switch(symbols[k].type) {
+      case BYTE:
+         sprintf(value,"%u",bmemory[i]);
+         break;
+      case INT:
+         sprintf(value,"%i",imemory[i]);
+         break;
+     case DOUBLE:
+        break;
+     }
+     strcat(array,value);
+     if (i+1 < stop)
+       strcat(array,",");
+  }
+  strcat(array,"]");
+  sprintf(returns,temp,array);
+}
+
+int getSize(int type) {
+  switch(type) {
+    case INT: return sizeof(int);
+    case BYTE: return sizeof(byte);
+    case DOUBLE: return sizeof(double);
+  }
+  return -1;
+}
+
+void setimage(char* returns, JsonHashTable json, char* text) { 
+  char* name = json.getString("name");
+  int tSize;
+  byte bvalue;
+  int ivalue;
+  double dvalue;
+  int k = findSymbol(name);
+  if (k == -1) {
+    sprintf(returns,err,"unknown symbol");
+    return;
+  }
+  
+  int start = json.getLong("start");
+  JsonArray array = json.getArray("values");
+  char value[16];
+  int stop = array.getLength();
+  int x, y;
+  int *imemory = (int*)&symbols[k].memory[start*getSize(symbols[k].type)];
+  byte *bmemory = (byte*)&symbols[k].memory[start*getSize(symbols[k].type)];
+  for (int i = 0; i<stop;i++) {
+    switch(symbols[k].type) {
+      case BYTE:
+         x = (char)array.getLong(i);
+         bmemory[i] = x;
+         break;
+      case INT:
+         y = array.getLong(i);
+         imemory[i] = y;
+         break;
+     case DOUBLE:
+        break;
+     }
+  }
+  sprintf(returns,temp,"ok");
+}
+
+void allocate(char* returns, JsonHashTable json, char* text) { 
+  char* name = json.getString("name");
+  int size = json.getLong("size");
+  char* type = json.getString("type");
+  int tSize = 1;
+  
+  int k = findSymbol(name);
+  if (k != -1) {
+      free(symbols[k].memory);
+  } else {
+    strcpy(symbols[nSym].name,name);
+    if (strcmp(type,"byte")==0) {
+      symbols[nSym].type = BYTE;
+      tSize = 1;
+    } 
+    if (strcmp(type,"int")==0) {
+      symbols[nSym].type = INT;
+      tSize = sizeof(int);
+    } 
+    if (strcmp(type,"double")==0) {
+      symbols[nSym].type = DOUBLE;
+      tSize = sizeof(double);
+    } 
+    k = nSym;
+    nSym++;
+  }
+  symbols[k].memory = (char*)malloc(tSize * size);
+  sprintf(returns,temp,"ok");
+}
+
+int findSymbol(char* name) {
+  for (int i=0;i<nSym;i++) {
+     if (strcmp(name,symbols[i].name)==0)
+      return i; 
+  }
+  return -1;
+}
+
 /*
  * Call an internal function by name, the 'call' method
  */
@@ -253,5 +376,6 @@ void transmit(char* buf) {
      client.print(buf);
    }
 }
+
 
 

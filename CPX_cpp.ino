@@ -28,9 +28,6 @@
 
 ////////////////////////////////////////////////////////
 
-#define SS_PIN 53
-#define RST_PIN 5
-
 MFRC522 mfrc522(SS_PIN, RST_PIN);	// Create MFRC522 instance.
 WiFiClient client;
 JsonParser<128> parser;
@@ -41,9 +38,11 @@ IPAddress server(CONTROL_PLAN_ADDR);
 int nJumps = 0;
 int nLang = 0;
 int nFuncs = 0;
+int nSym = 0;
 jumpTYPE jumps[8];
 langTYPE lang[32];
 callTYPE functions[8];         // a list of 8 possible functions
+symbolTYPE symbols[8];
 
 /*
  * Internal functions of the CPX
@@ -80,6 +79,12 @@ void setup() {
   lang[nLang++].functionPtr = &printx;
   strcpy(lang[nLang].name,"call");
   lang[nLang++].functionPtr = &call;
+  strcpy(lang[nLang].name,"allocate");
+  lang[nLang++].functionPtr = &allocate;
+  strcpy(lang[nLang].name,"getimage");
+  lang[nLang++].functionPtr = &getimage;
+  strcpy(lang[nLang].name,"setimage");
+  lang[nLang++].functionPtr = &setimage;
   
   Serial.begin(19200);
   SPI.begin();

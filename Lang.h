@@ -1,5 +1,8 @@
 #define NAMELEN 16
 
+#define BYTE    0
+#define INT     1
+#define DOUBLE  2
 typedef struct
 {
     int code;               // is -1 if not a# reserved word
@@ -19,6 +22,14 @@ typedef struct
     int (*functionPtr)(char*,char*);
 } callTYPE;
 
+typedef struct  {
+    char name[NAMELEN];
+    char* memory;
+    int length;
+    int type;
+}
+symbolTYPE;
+
 char* testme(char*);           // a sample internal function
 
 void ping(char* returns, JsonHashTable json, char* text);
@@ -34,11 +45,17 @@ void notify(char* returns, JsonHashTable json, char* text);
 void gotox(char* returns, JsonHashTable json, char* text);
 void printx(char* returns, JsonHashTable json, char* text);
 void call(char* returns, JsonHashTable json, char* text);
+void allocate(char* returns, JsonHashTable json, char* text);
+void getimage(char* returns, JsonHashTable json, char* text);
+void setimage(char* returns, JsonHashTable json, char* text);
 
 void sendCPmessage(char* auth, char* plan, char* value, char* returns, int wait);
 int getJumpCount(char* label);
 int findFunction(char* name);
 int findIndex(char* label,JsonArray commands);
+int findSymbol(char* name);
 char* encode(char* data);
 char* readBlock();
 void transmit(char* buf);
+
+int getSize(int type);
