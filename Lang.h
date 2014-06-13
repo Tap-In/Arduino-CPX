@@ -48,6 +48,8 @@ void call(char* returns, JsonHashTable json, char* text);
 void allocate(char* returns, JsonHashTable json, char* text);
 void getimage(char* returns, JsonHashTable json, char* text);
 void setimage(char* returns, JsonHashTable json, char* text);
+void seteeprom(char* returns, JsonHashTable json, char* text);
+void geteeprom(char* returns, JsonHashTable json, char* text);
 
 void sendCPmessage(char* auth, char* plan, char* value, char* returns, int wait);
 int getJumpCount(char* label);
@@ -59,3 +61,7 @@ char* readBlock();
 void transmit(char* buf);
 
 int getSize(int type);
+
+long symbolRef(JsonHashTable json, char* label);
+long getValueAt(char* name, int index);
+void shift(JsonHashTable json, long value);

@@ -18,6 +18,7 @@
 
 #include <MFRC522.h>
 #include <SPI.h>
+#include <EEPROM.h>
 
 #include <JsonArray.h>
 #include <JsonParser.h>
@@ -85,6 +86,10 @@ void setup() {
   lang[nLang++].functionPtr = &getimage;
   strcpy(lang[nLang].name,"setimage");
   lang[nLang++].functionPtr = &setimage;
+  strcpy(lang[nLang].name,"seteeprom");
+  lang[nLang++].functionPtr = &seteeprom;
+  strcpy(lang[nLang].name,"geteeprom");
+  lang[nLang++].functionPtr = &geteeprom;
   
   Serial.begin(19200);
   SPI.begin();
@@ -121,7 +126,7 @@ void setup() {
      doWiFi(); 
      Serial.println("CPX .1 started");
   } else {
-    sprintf(returns,iprint,"CPX .1 started");
+    sprintf_P(returns,iprint,"CPX .1 started");
     char *send = encode(returns);
     Serial.write(send);
     free(send);
@@ -191,7 +196,7 @@ void loop() {
   JsonArray commands = hashTable.getArray("commands");
   if (commands.success()) {
     pc = 0;
-    sprintf(returns,temp,"ok");
+    sprintf_P(returns,temp,"ok");
     char* send = encode(returns);
     transmit(send);                 // ack command block
     free(send);
@@ -221,7 +226,7 @@ void loop() {
         else
           pc = findIndex(label,commands);
           if (pc == -1) {
-            sprintf(returns,err,"No such label %s",label);
+            sprintf_P(returns,err,"No such label %s",label);
             break;
           }
       }
@@ -245,7 +250,7 @@ void doCommand(char* returns, JsonHashTable json, char* text) {
   char* command;
   command = json.getString("command");
   if (command == NULL) {
-     sprintf(returns,err,"badly formed command"); 
+     sprintf_P(returns,err,"badly formed command"); 
      return;
   }
  
@@ -255,7 +260,7 @@ void doCommand(char* returns, JsonHashTable json, char* text) {
       return;
     }
   }
-  sprintf(returns,err,"unknown command"); 
+  sprintf_P(returns,err,"unknown command"); 
 }
 
 
@@ -291,6 +296,14 @@ int getRfid(char *data) {
    s.toCharArray(data,12);
    mfrc522.PICC_HaltA();  
    return 1;
+}
+
+void setEEPROM(int address, int value) {
+   EEPROM.write(address, value);
+}
+
+int getEEPROM(int address) {
+   return EEPROM.read(address);
 }
 
 

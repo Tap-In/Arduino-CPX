@@ -25,15 +25,17 @@ extern langTYPE lang[];
 extern callTYPE functions[];  
 extern symbolTYPE symbols[];
 extern int getRfid(char *data);
+extern int getEEPROM(int address);
+extern void setEEPROM(int address, int value);
 
 void ping(char* returns, JsonHashTable json, char* text) { 
-    sprintf(returns,temp,"ok");
+    strcpy_P(returns,PSTR("{\"map\":{\"value\":\"ok\"},\"globals\":[]}"));
 }
 
 void readrfid(char* returns, JsonHashTable json, char* text) { 
   char id[16];
   if (getRfid(id))
-      sprintf(returns,temp,id);
+      sprintf(returns,PSTR("{\"map\":{\"value\":\"%s\"},\"globals\":[]}"),id);
    else
       sprintf(returns,err,"RFID reader timed out");
 } 
@@ -42,43 +44,61 @@ void digitalwrite(char* returns, JsonHashTable json, char* text) {
   char* command;
   int v1, v2;
 
-  v1 = json.getLong("pin");
-  v2 = json.getLong("value");
+  v1 = symbolRef(json,"pin");
+  v2 = symbolRef(json,"value");
   setDigitalValue(v1,v2);
-  sprintf(returns,temp,"ok");
+  sprintf_P(returns,temp,"ok");
 }
 
 void digitalread(char* returns, JsonHashTable json, char* text) { 
   char* command;
   int v1, v2;
   command = json.getString("command");
-  v1 = json.getLong("pin");
+  v1 = symbolRef(json,"pin");
   v2 = getDigitalValue(v1);
-  sprintf(returns,tempn,v2);
+  sprintf_P(returns,tempn,v2);
+  shift(json, v2);
 }
 
 void analogwrite(char* returns, JsonHashTable json, char* text) { 
   char* command;
   int v1, v2;
-  v1 = json.getLong("pin");
-  v2 = json.getLong("value");
+  v1 = symbolRef(json,"pin");
+  v2 = symbolRef(json,"value");
   setAnalogValue(v1,v2);
-  sprintf(returns,temp,"ok");
+  sprintf_P(returns,temp,"ok");
 }
 
 void analogread(char* returns, JsonHashTable json, char* text) { 
   char* command;
   int v1, v2;
-  v1 = json.getLong("pin");
+  v1 = symbolRef(json,"pin");
   v2 = getAnalogValue(v1);
-  sprintf(returns,tempn,v2);
+  sprintf_P(returns,tempn,v2);
+  shift(json, v2);
+}
+
+void geteeprom(char* returns, JsonHashTable json, char* text) { 
+  int v1, v2;
+  v1 = symbolRef(json,"adress");
+  v2 = getEEPROM(v1);
+  sprintf_P(returns,temp,"ok");
+  shift(json,v2);
+}
+
+void seteeprom(char* returns, JsonHashTable json, char* text) { 
+  int v1, v2;
+  v1 = symbolRef(json,"adress");
+  v2 = symbolRef(json,"value");
+  setEEPROM(v1,v2);
+  sprintf_P(returns,temp,"ok");
 }
 
 void delayx(char* returns, JsonHashTable json, char* text) { 
   int v1;
-  v1 = json.getLong("value");
+  v1 = symbolRef(json,"value");
   delay(v1);
-  sprintf(returns,temp,"ok");
+  sprintf_P(returns,temp,"ok");
 }
 
 void notify(char* returns, JsonHashTable json, char* text) { 
@@ -90,7 +110,7 @@ void notify(char* returns, JsonHashTable json, char* text) {
   char* value = json.getString("value");
   int wait = json.getLong("wait");
   sendCPmessage(auth, plan, value, returnsx, wait);
-  sprintf(returns,temp,returns);
+  sprintf_P(returns,temp,returns);
 }
 
 void gotox(char* returns, JsonHashTable json, char* text) { 
@@ -115,13 +135,13 @@ void gotox(char* returns, JsonHashTable json, char* text) {
       strcpy(text,label);
       
     }
-    sprintf(returns,temp,"ok");
+    sprintf_P(returns,temp,"ok");
   }
   
 void printx(char* returns, JsonHashTable json, char* text) { 
   char* command;
   char* value = json.getString("value");
-    sprintf(returns,iprint,value);
+    sprintf_P(returns,iprint,value);
 }
 
 void call(char* returns, JsonHashTable json, char* text) { 
@@ -171,8 +191,8 @@ void getimage(char* returns, JsonHashTable json, char* text) {
     sprintf(returns,err,"unknown symbol");
     return;
   }
-  int start = json.getLong("start");
-  int stop  = json.getLong("stop");
+  int start = symbolRef(json,"start");
+  int stop  = symbolRef(json,"stop");
   char value[16];
   int *imemory = (int*)&symbols[k].memory[start*getSize(symbols[k].type)];
   byte *bmemory = (byte*)&symbols[k].memory[start*getSize(symbols[k].type)];
@@ -193,7 +213,25 @@ void getimage(char* returns, JsonHashTable json, char* text) {
        strcat(array,",");
   }
   strcat(array,"]");
-  sprintf(returns,temp,array);
+  sprintf_P(returns,temp,array);
+}
+
+long getValueAt(char* name, int index) {
+  int k = findSymbol(name);
+  long value;
+  int *imemory = (int*)&symbols[k].memory[index*getSize(symbols[k].type)];
+  byte *bmemory = (byte*)&symbols[k].memory[index*getSize(symbols[k].type)];
+  switch(symbols[k].type) {
+      case BYTE:
+         value = bmemory[0];
+         break;
+      case INT:
+         value = imemory[0];
+         break;
+     case DOUBLE:
+        break;
+     }
+  return value;
 }
 
 int getSize(int type) {
@@ -217,7 +255,7 @@ void setimage(char* returns, JsonHashTable json, char* text) {
     return;
   }
   
-  int start = json.getLong("start");
+  int start = symbolRef(json,"start");
   JsonArray array = json.getArray("values");
   char value[16];
   int stop = array.getLength();
@@ -238,12 +276,12 @@ void setimage(char* returns, JsonHashTable json, char* text) {
         break;
      }
   }
-  sprintf(returns,temp,"ok");
+  sprintf_P(returns,temp,"ok");
 }
 
 void allocate(char* returns, JsonHashTable json, char* text) { 
   char* name = json.getString("name");
-  int size = json.getLong("size");
+  int size = symbolRef(json,"size");
   char* type = json.getString("type");
   int tSize = 1;
   
@@ -268,9 +306,12 @@ void allocate(char* returns, JsonHashTable json, char* text) {
     nSym++;
   }
   symbols[k].memory = (char*)malloc(tSize * size);
-  sprintf(returns,temp,"ok");
+  sprintf_P(returns,temp,"ok");
 }
 
+/**
+  * Find the index of a symbol in the symbol table
+  */
 int findSymbol(char* name) {
   for (int i=0;i<nSym;i++) {
      if (strcmp(name,symbols[i].name)==0)
@@ -375,6 +416,42 @@ void transmit(char* buf) {
    } else {
      client.print(buf);
    }
+}
+
+/**
+  * Dereference a symbol at this label, or if a number, simply return the number
+  */
+long symbolRef(JsonHashTable json, char* label) {
+  long returns;
+  int index = json.getLong("index");
+  if (json.isNumber(label)) {
+    returns = json.getLong(label);
+  } else {
+     returns = getValueAt(label,index);
+  }
+  return returns;
+}
+
+void shift(JsonHashTable json, long value) {
+   char* name = json.getString("shift");
+   if (name == NULL)
+     return;
+  int k = findSymbol(name);
+  if (k == -1)
+    return;
+  int index = json.getLong("index");
+  int *imemory = (int*)&symbols[k].memory[index*getSize(symbols[k].type)];
+  byte *bmemory = (byte*)&symbols[k].memory[index*getSize(symbols[k].type)];
+  switch(symbols[k].type) {
+      case BYTE:
+         bmemory[0] = (byte)value;
+         break;
+      case INT:
+         imemory[0] = value;
+         break;
+     case DOUBLE:
+        break;
+     }
 }
 
 

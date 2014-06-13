@@ -82,18 +82,3 @@ char* JsonHashTable::getString(const char* key)
 {
     return getStringFromToken(getToken(key));
 }
-
-bool JsonHashTable::isString(char* key)
-{
-jsmtok_t* token = getToken(key);
-    if (token == 0 || token->type != JSMN_PRIMITIVE && token->type != JSMN_STRING)
-        return 0;
-    return 1;
-}
-
-bool JsonHashTable::isNumber(char* key)
-{
-jsmtok_t* token = getToken(key);
-  if (token == 0 || token->type != JSMN_PRIMITIVE) return 0;
-  return 1;
-}

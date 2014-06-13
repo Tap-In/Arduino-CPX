@@ -29,8 +29,6 @@ public:
     JsonHashTable getHashTable(const char* key);
     long getLong(const char* key);
     char* getString(const char* key);
-    bool isString(char* key);
-    bool isNumber(char* key);
 
 private:
 

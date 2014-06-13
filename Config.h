@@ -19,8 +19,8 @@
 #define WIFI   0
 #define PROXY  1
 
-#define temp      "{\"map\":{\"value\":\"%s\"},\"globals\":[]}"
-#define iprint    "{\"iprint\":\"%s\"}"
-#define tempn     "{\"map\":{\"value\":\"%d\"},\"globals\":[]}"
-#define err       "{\"map\":{\"error\":true,\"value\":\"%s\"},\"globals\":[]}"
+#define temp      PSTR("{\"map\":{\"value\":\"%s\"},\"globals\":[]}")
+#define iprint    PSTR("{\"iprint\":\"%s\"}")
+#define tempn     PSTR("{\"map\":{\"value\":\"%d\"},\"globals\":[]}")
+#define err       PSTR("{\"map\":{\"error\":true,\"value\":\"%s\"},\"globals\":[]}")
 

@@ -1,6 +1,7 @@
 #include "Arduino.h"
 #include "Hardware.h";
 
+
 ////////////////////// ARDUINO HARDWARE COMMANDS ///////////////////////////////
 
 void setPinMode(int pin, int value) {
@@ -24,4 +25,5 @@ int getAnalogValue(int pin) {
    return analogRead(pin);
 }
 
+    
     
