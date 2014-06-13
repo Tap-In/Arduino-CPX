@@ -110,7 +110,7 @@ void setup() {
     digitalWrite(8,!mode);
     digitalWrite(9,!mode);
     digitalWrite(10,mode);
-    delay(1000);
+    delay(250);
     if (mode == 1)
       mode = 0;
     else
@@ -203,22 +203,32 @@ void loop() {
    
     while(pc < commands.getLength()) {
         label[0] = 0;
+        int inter = 0;
         if (interface == PROXY) {
-          if (Serial.available()) {
-              json = readBlock();
-              hashTable = hashTable.getHashTable("map");
-              doCommand(returns,hashTable,label);
-              break;
+          if (Serial.available()) { 
+              inter = 1;
+              char* send = encode("{\"map\":{\"value\":\"ok\"},\"globals\":[]}");      
+              transmit(send);
+              free(json);;
+              free(send);
+              while(Serial.available()) Serial.read();
+              return;
           }
         } else {
           if (client.available()) {
-              json = readBlock();
-              hashTable = parser.parseHashTable(json);
-              hashTable = hashTable.getHashTable("map");
-              doCommand(returns,hashTable,label);
-              break;
+              inter = 1;
           }
         }
+        
+        if (inter == 1) {
+            char* send = encode("{\"map\":{\"value\":\"ok\"},\"globals\":[]}");      
+            transmit(send);
+            free(json);;
+            free(send);
+            while(Serial.available()) Serial.read();
+            return;
+        }
+        
         JsonHashTable cmd = commands.getHashTable(pc);
         doCommand(returns,cmd,label);
         if (strlen(label) == 0)
