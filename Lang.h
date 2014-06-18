@@ -5,7 +5,6 @@
 #define DOUBLE  2
 typedef struct
 {
-    int code;               // is -1 if not a# reserved word
     char name[16];
     void (*functionPtr)(char* returns, JsonHashTable json, char* text);
 } langTYPE;

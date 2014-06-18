@@ -37,11 +37,27 @@ int interface = INTERFACE_TYPE;
 IPAddress server(CONTROL_PLAN_ADDR); 
 
 int nJumps = 0;
-int nLang = 0;
 int nFuncs = 0;
 int nSym = 0;
 jumpTYPE jumps[8];
-langTYPE lang[32];
+langTYPE lang[] = {
+  { "ping", &ping },
+  {"readrfid", &readrfid},
+  {"digitalwrite",&digitalwrite},
+  {"digitalread",&digitalread},
+  {"analogread",&analogread},
+  {"analogwrite",&analogwrite},
+  {"delay", &delayx},
+  {"notify",&notify},
+  {"goto",&gotox},
+  {"print", &printx},
+  {"call",&call},
+  {"allocate", &allocate},
+  {"getimage",&getimage},
+  {"setimage", &setimage},
+  {"seteeprom",&seteeprom},
+  {"geteeprom",&geteeprom}
+}; 
 callTYPE functions[8];         // a list of 8 possible functions
 symbolTYPE symbols[8];
 
@@ -58,39 +74,7 @@ void setup() {
   functions[0].functionPtr = testme;
   nFuncs++;
   
-  strcpy(lang[nLang].name,"ping");
-  lang[nLang++].functionPtr = &ping;
-  strcpy(lang[nLang].name,"readrfid");
-  lang[nLang++].functionPtr = &readrfid;
-  strcpy(lang[nLang].name,"digitalwrite");
-  lang[nLang++].functionPtr = &digitalwrite;
-  strcpy(lang[nLang].name,"digitalread");
-  lang[nLang++].functionPtr = &digitalread;
-  strcpy(lang[nLang].name,"analogread");
-  lang[nLang++].functionPtr = &analogread;
-  strcpy(lang[nLang].name,"analogwrite");
-  lang[nLang++].functionPtr = &analogwrite;
-  strcpy(lang[nLang].name,"delay");
-  lang[nLang++].functionPtr = &delayx;
-  strcpy(lang[nLang].name,"notify");
-  lang[nLang++].functionPtr = &notify;
-  strcpy(lang[nLang].name,"goto");
-  lang[nLang++].functionPtr = &gotox;
-  strcpy(lang[nLang].name,"print");
-  lang[nLang++].functionPtr = &printx;
-  strcpy(lang[nLang].name,"call");
-  lang[nLang++].functionPtr = &call;
-  strcpy(lang[nLang].name,"allocate");
-  lang[nLang++].functionPtr = &allocate;
-  strcpy(lang[nLang].name,"getimage");
-  lang[nLang++].functionPtr = &getimage;
-  strcpy(lang[nLang].name,"setimage");
-  lang[nLang++].functionPtr = &setimage;
-  strcpy(lang[nLang].name,"seteeprom");
-  lang[nLang++].functionPtr = &seteeprom;
-  strcpy(lang[nLang].name,"geteeprom");
-  lang[nLang++].functionPtr = &geteeprom;
-  
+
   Serial.begin(19200);
   SPI.begin();
   mfrc522.PCD_Init();	// Init MFRC522 card
@@ -263,12 +247,13 @@ void doCommand(char* returns, JsonHashTable json, char* text) {
      sprintf_P(returns,err,"badly formed command"); 
      return;
   }
- 
-  for (int i=0;i<nLang;i++) {
-    if (strcmp(lang[i].name,command)==0) {
-      lang[i].functionPtr(returns,json,text);
+  langTYPE* l = lang;
+  while(l != 0) {
+    if (strcmp(l->name,command)==0) {
+      l->functionPtr(returns,json,text);
       return;
     }
+    l++;
   }
   sprintf_P(returns,err,"unknown command"); 
 }
