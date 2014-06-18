@@ -29,8 +29,6 @@ typedef struct  {
 }
 symbolTYPE;
 
-char* testme(char*);           // a sample internal function
-
 void ping(char* returns, JsonHashTable json, char* text);
 
 void ping(char* returns, JsonHashTable json, char* text);

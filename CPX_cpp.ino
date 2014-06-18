@@ -68,10 +68,15 @@ void doWiFi();
 int getRfid(char *data);
 void doCommand(char* returns, JsonHashTable json, char* label);
 
+int testme(char*, char*);           // a sample internal function
+int lamp(char*, char*);
+
 void setup() {
   char returns[128];
   strcpy(functions[0].name,"testme");
   functions[0].functionPtr = testme;
+  strcpy(functions[0].name,"lamp");
+  functions[0].functionPtr = lamp;
   nFuncs++;
   
 
@@ -265,6 +270,14 @@ void doCommand(char* returns, JsonHashTable json, char* text) {
 int testme(char* rets, char* param) {
     strcpy(rets,"You have arrived");
     return 1;
+}
+
+int lamp(char* returns, char* param) {
+  int value = atoi(param);
+  Serial.println(); Serial.print("LAMP: ");
+  Serial.println(param);
+  strcpy(returns,"lamp changed");
+  return 1;
 }
 
 
