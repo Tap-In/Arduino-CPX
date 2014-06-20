@@ -1,13 +1,16 @@
+
 #include "Arduino.h"
+
+#include <ccspi.h>
+#include <Adafruit_CC3000.h>
+#include <Adafruit_CC3000_Server.h>
 
 #include <stdio.h>
 #include <JsonArray.h>
 #include <JsonParser.h>
 #include <JsonObjectBase.h>
 #include <JsonHashTable.h>
-#include <WiFi.h>
-#include <WiFiClient.h>
-#include <MFRC522.h>
+
 #include "Lang.h"
 #include "Hardware.h"
 #include "Config.h"
@@ -15,7 +18,7 @@
 extern JsonHashTable hashTable;
 //extern char* temp;;
 extern int interface;
-extern WiFiClient client;
+extern Adafruit_CC3000_Client client;
 extern int nJumps;
 extern int nLang;
 extern int nFuncs;
@@ -28,17 +31,21 @@ extern int getRfid(char *data);
 extern int getEEPROM(int address);
 extern void setEEPROM(int address, int value);
 
+void auth(char* returns, JsonHashTable json, char* text) {
+  boolean auth = json.getBool("value");
+  if (auth == false) {
+    Serial.println("Authorization failed, halted");
+    while(true);
+  } else {
+    if (interface == WIFI)
+      Serial.println("Authorization Ok");
+  }
+  returns[0] = 0;
+}
+
 void ping(char* returns, JsonHashTable json, char* text) { 
     strcpy_P(returns,PSTR("{\"map\":{\"value\":\"ok\"},\"globals\":[]}"));
 }
-
-void readrfid(char* returns, JsonHashTable json, char* text) { 
-  char id[16];
-  if (getRfid(id))
-      sprintf(returns,PSTR("{\"map\":{\"value\":\"%s\"},\"globals\":[]}"),id);
-   else
-      sprintf(returns,err,"RFID reader timed out");
-} 
 
 void digitalwrite(char* returns, JsonHashTable json, char* text) { 
   char* command;
@@ -362,7 +369,14 @@ char* readBlock() {
       while(!Serial.available());
       value = Serial.read();
     } else {
-      while(!client.available());
+     int z = 0;
+     while(client.connected() && !client.available()) {
+         if (z++ > 5000) {
+           z = 0;
+           Serial.println("PING");
+           client.write("!",1);
+         }
+     }
       value = client.read();
     }
     if (value != 'X')
@@ -377,7 +391,8 @@ char* readBlock() {
       while(!Serial.available());
       buf[i] = (char)Serial.read();
     } else {
-      
+      while(!client.available());
+      buf[i] = (char)client.read();
     }
   }
   buf[sz] = 0;
@@ -414,7 +429,7 @@ void transmit(char* buf) {
    if (interface == PROXY) {
      Serial.print(buf);
    } else {
-     client.print(buf);
+      client.write(buf,strlen(buf));
    }
 }
 

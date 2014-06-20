@@ -29,8 +29,7 @@ typedef struct  {
 }
 symbolTYPE;
 
-void ping(char* returns, JsonHashTable json, char* text);
-
+void auth(char* returns, JsonHashTable json, char* text);
 void ping(char* returns, JsonHashTable json, char* text);
 void readrfid(char* returns, JsonHashTable json, char* text);
 void digitalwrite(char* returns, JsonHashTable json, char* text);
