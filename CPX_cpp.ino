@@ -189,6 +189,7 @@ if (!cc3000.begin())
     client = cc3000.connectTCP(ip, CONTROL_PLAN_PORT);
     if (client.connected()) {
       Serial.println(F("Wifi Connected"));
+      blink(GREEN,250,3);
       return;
     }
     delay(5000);
@@ -227,6 +228,11 @@ void loop() {
   int v1, v2, pc;
   nJumps = 0;
   json = readBlock();
+  if (json == NULL) {
+    Serial.println("Host disconnected, need to reboot");
+    blink(RED,250,0);
+    return;
+  }
   JsonHashTable hashTable = parser.parseHashTable(json);
   hashTable = hashTable.getHashTable("map");
   JsonArray commands = hashTable.getArray("commands");

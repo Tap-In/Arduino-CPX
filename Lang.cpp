@@ -173,6 +173,10 @@ void sendCPmessage(char* auth, char* plan, char* value, char* returns, int wait)
   encode(buf);
   transmit(buf);
   char* json = readBlock();
+  if (json == NULL) {
+    returns[0] = 0;
+    return;
+  }
   strcpy(returns,json);
   free(json);
 }
@@ -377,6 +381,10 @@ char* readBlock() {
            client.write("!",1);
          }
      }
+     if (!client.connected()) {
+         Serial.println("Host has disconnected");
+         blink(RED,250,0);
+     }
       value = client.read();
     }
     if (value != 'X')
@@ -397,6 +405,25 @@ char* readBlock() {
   }
   buf[sz] = 0;
   return buf;
+}
+
+/**
+  * BLINK A PIN n times
+  */
+void blink(int PIN, int delta, int times) {
+  int k = 0;
+  while(true) {
+    digitalWrite(PIN,0);
+    delay(delta);
+    digitalWrite(PIN,1);
+    delay(delta);
+    if (times > 0) {
+      if (k++ > times) {
+          digitalWrite(PIN,0);
+          return;
+      }
+    }
+  }
 }
 
 /*

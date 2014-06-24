@@ -55,6 +55,7 @@ int findSymbol(char* name);
 char* encode(char* data);
 char* readBlock();
 void transmit(char* buf);
+void blink(int PIN, int delay, int times);
 
 int getSize(int type);
 
