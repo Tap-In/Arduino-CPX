@@ -74,14 +74,18 @@ void doCommand(char* returns, JsonHashTable json, char* label);
 int testme(char*, char*);           // a sample internal function
 int lamp(char*, char*);
 void construct(char*,char*[]);
+long lastTime;
 
 void setup() {
-  char returns[128];
+  lastTime = millis();
+  char returns[512];
   strcpy(functions[0].name,"testme");
   functions[0].functionPtr = testme;
-  strcpy(functions[0].name,"lamp");
-  functions[0].functionPtr = lamp;
-  nFuncs++;
+  strcpy(functions[1].name,"lamp");
+  functions[1].functionPtr = lamp;
+    strcpy(functions[2].name,"fade");
+  functions[2].functionPtr = fade;
+  nFuncs = 3;
   
 
   Serial.begin(19200);
@@ -118,7 +122,7 @@ void setup() {
   digitalWrite(GREEN,0);
   
    
-  fade(1);
+  fade(returns,"1");
   delay(200);
   digitalWrite(RGB_RED,1);
   digitalWrite(RGB_GREEN,1);
@@ -127,7 +131,7 @@ void setup() {
  if (interface == WIFI) {
      doWiFi(); 
      Serial.println("CPX .1 started");
-     char* values[] = {"\"user\"",USER,"\"auth\"",AUTH,"\"id\"",ID,0};
+     char* values[] = {"\"user\"",USER,"\"id\"",ID,0};
      construct(returns,values);
      char *send = encode(returns);
      Serial.println(send);
@@ -383,6 +387,20 @@ void setEEPROM(int address, int value) {
 int getEEPROM(int address) {
    return EEPROM.read(address);
 }
+
+
+void sendPing() {
+  return;
+  if (lastTime + 15000 < millis()) {
+    if (interface != PROXY) {
+      if(client.connected()) {
+       client.write("!",1); 
+      }
+    }
+    lastTime = millis();
+  }
+}
+
 
 
 

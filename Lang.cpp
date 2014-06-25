@@ -31,6 +31,8 @@ extern int getRfid(char *data);
 extern int getEEPROM(int address);
 extern void setEEPROM(int address, int value);
 
+int pingCount = 0;
+
 void auth(char* returns, JsonHashTable json, char* text) {
   boolean auth = json.getBool("value");
   if (auth == false) {
@@ -112,11 +114,10 @@ void notify(char* returns, JsonHashTable json, char* text) {
   char* command;
   int v1, v2;
   char returnsx[512];
-  char* auth = json.getString("auth");
   char* plan = json.getString("plan");
   char* value = json.getString("value");
   int wait = json.getLong("wait");
-  sendCPmessage(auth, plan, value, returnsx, wait);
+  sendCPmessage(plan, value, returnsx, wait);
   sprintf_P(returns,temp,returns);
 }
 
@@ -166,9 +167,9 @@ void call(char* returns, JsonHashTable json, char* text) {
     }
   }
   
-void sendCPmessage(char* auth, char* plan, char* value, char* returns, int wait) {
+void sendCPmessage(char* plan, char* value, char* returns, int wait) {
   char* buf = (char*)malloc(sizeof(char)*512);
- // sprintf(buf,"{\"map\":{\"command\":\"notify\",\"auth\",\”%s\",\"plan\":”%s\",\"value\": \"%s\"}}",
+ // sprintf(buf,"{\"map\":{\"command\":\"notify\",,\"plan\":”%s\",\"value\": \"%s\"}}",
  //   auth,plan,value);
   encode(buf);
   transmit(buf);
@@ -375,11 +376,12 @@ char* readBlock() {
     } else {
      int z = 0;
      while(client.connected() && !client.available()) {
-         if (z++ > 5000) {
+         if (z++ > 1000) {
            z = 0;
-           Serial.println("PING");
+           Serial.print("PING ");
            client.write("!",1);
-         }
+           Serial.println(pingCount++);
+    }
      }
      if (!client.connected()) {
          Serial.println("Host has disconnected");

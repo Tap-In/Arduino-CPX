@@ -2,6 +2,8 @@
 #include "Config.h"
 #include "Hardware.h";
 
+extern void sendPing();
+
 
 ////////////////////// ARDUINO HARDWARE COMMANDS ///////////////////////////////
 
@@ -26,7 +28,8 @@ int getAnalogValue(int pin) {
    return analogRead(pin);
 }
 
-void fade(int count) {
+int fade(char* rets, char* param) {
+  int count = atoi(param);
   int redVal = 255;
   int blueVal = 0;
   int greenVal = 0;
@@ -39,8 +42,10 @@ for (int k=0;k<count;k++) {
     analogWrite( RGB_RED, 255 - redVal );
 
     delay( delayTime );
+    sendPing();
   }
- 
+  sendPing();
+  
   redVal = 0;
   blueVal = 0;
   greenVal = 255;
@@ -51,7 +56,9 @@ for (int k=0;k<count;k++) {
     analogWrite( RGB_GREEN, 255 - greenVal );
 
     delay( delayTime );
+    sendPing();
   }
+  sendPing();
  
   redVal = 0;
   blueVal = 255;
@@ -63,8 +70,11 @@ for (int k=0;k<count;k++) {
     analogWrite( RGB_BLUE, 255 - blueVal );
 
     delay( delayTime );
+    sendPing();
   }
+  sendPing();
   
 }
+  strcpy(rets,"complete");
 }
     

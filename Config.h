@@ -40,6 +40,5 @@
 
 
 #define INTERFACE_TYPE WIFI
-#define AUTH    "\"666\""
 #define USER    "\"BEN\""
 #define ID      "\"5551212\""
