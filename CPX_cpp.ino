@@ -76,20 +76,84 @@ int lamp(char*, char*);
 void construct(char*,char*[]);
 long lastTime;
 
+void eepromString(int address) {
+   byte n;
+   while(true) {
+    if (Serial.available()) {
+      n=Serial.read();
+      if (n == '!')
+        break;
+      EEPROM.write(address++,n);
+    }
+  }
+  EEPROM.write(address,0);
+}
+
+void writeString(int address, char *s) {
+   int n = 0;
+   for (int i=address; i < address+16;i++) {
+      EEPROM.write(i,s[n]);
+      if (s[n] == 0) 
+        return;
+    }
+  }
+
+void eepromPrint(int address) {
+  byte n;
+  while(true) {
+    n = EEPROM.read(address++);
+    if (n != 0) {
+      Serial.write(n);
+    }
+    else
+      break;
+  }
+  Serial.println();
+}
+
+void post() {
+  if (EEPROM.read(0) == 255) {
+    writeString(0,USER);
+    writeString(16,ID);
+    if (INTERFACE_TYPE == WIFI) {
+      writeString(32,WLAN_SSID);
+      writeString(48,WLAN_PASS);
+    }    
+  }
+  Serial.print("User name: ");  
+  eepromString(0);
+  eepromPrint(0);
+  
+  Serial.print("Device id: ");  
+  eepromString(16);
+  eepromPrint(16);
+  
+  if (INTERFACE_TYPE == WIFI) {
+    Serial.print("SSID: ");  
+    eepromString(32);
+    eepromPrint(32);
+    
+    Serial.print("Password: ");  
+    eepromString(48);
+    eepromPrint(48);
+  }    
+}
 void setup() {
+  Serial.begin(19200);
+  
+  SPI.begin();
+ // post();
+  
   lastTime = millis();
   char returns[512];
   strcpy(functions[0].name,"testme");
   functions[0].functionPtr = testme;
   strcpy(functions[1].name,"lamp");
   functions[1].functionPtr = lamp;
-    strcpy(functions[2].name,"fade");
+  strcpy(functions[2].name,"fade");
   functions[2].functionPtr = fade;
   nFuncs = 3;
-  
-
-  Serial.begin(19200);
-  SPI.begin();
+ 
   
   // RGB SETUP
   pinMode(RGB_GREEN, OUTPUT);
@@ -143,6 +207,10 @@ void setup() {
     Serial.write(send);
     free(send);
   }
+  sprintf(returns,"!Boot/%s/%s",USER,ID);
+  char *send = encode(returns);
+  Serial.write(send);
+  free(send);
 }
 void construct(char* returns,char *vals[]) {
   strcpy(returns,"{\"map\":{");

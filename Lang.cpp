@@ -1,3 +1,7 @@
+#include <ccspi.h>
+#include <Adafruit_CC3000.h>
+#include <Adafruit_CC3000_Server.h>
+
 
 #include "Arduino.h"
 
@@ -36,17 +40,19 @@ int pingCount = 0;
 void auth(char* returns, JsonHashTable json, char* text) {
   boolean auth = json.getBool("value");
   if (auth == false) {
-    Serial.println("Authorization failed, halted");
+    //Serial.println("Authorization failed, halted");
+    digitalWrite(6,1);
     while(true);
   } else {
     if (interface == WIFI)
       Serial.println("Authorization Ok");
   }
+  digitalWrite(4,1);
   returns[0] = 0;
 }
 
 void ping(char* returns, JsonHashTable json, char* text) { 
-    strcpy_P(returns,PSTR("{\"map\":{\"value\":\"ok\"},\"globals\":[]}"));
+    sprintf(returns,"{\"map\":{\"value\":%u},\"globals\":[]}",millis()/1000);
 }
 
 void digitalwrite(char* returns, JsonHashTable json, char* text) { 
@@ -149,7 +155,9 @@ void gotox(char* returns, JsonHashTable json, char* text) {
 void printx(char* returns, JsonHashTable json, char* text) { 
   char* command;
   char* value = json.getString("value");
-    sprintf_P(returns,iprint,value);
+  Serial.println("READY");
+  sprintf_P(returns,iprint,value);
+  Serial.println("DONE");
 }
 
 void call(char* returns, JsonHashTable json, char* text) { 
