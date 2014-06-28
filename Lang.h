@@ -31,6 +31,7 @@ symbolTYPE;
 
 void auth(char* returns, JsonHashTable json, char* text);
 void ping(char* returns, JsonHashTable json, char* text);
+void trigger(char* returns, JsonHashTable json, char* text);
 void readrfid(char* returns, JsonHashTable json, char* text);
 void digitalwrite(char* returns, JsonHashTable json, char* text);
 void digitalread(char* returns, JsonHashTable json, char* text);

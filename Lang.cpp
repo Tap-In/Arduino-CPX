@@ -55,8 +55,30 @@ void ping(char* returns, JsonHashTable json, char* text) {
     sprintf(returns,"{\"map\":{\"value\":%u},\"globals\":[]}",millis()/1000);
 }
 
+void trigger(char* returns, JsonHashTable json, char* text) { 
+  
+  
+   sendCPmessage("ploh@tapinsystems.com", "53ab42aa484a85b5af000014", "{}", "http://demo1.tapinsystems.net:3000/runplan" , returns, 0);
+  
+  
+  int pin = symbolRef(json,"pin");
+  long to = symbolRef(json,"timeout");
+  pinMode(pin, INPUT);
+  delay(100);
+  int old  = digitalRead(pin);
+  long value = millis();
+  while(digitalRead(pin) == old) {
+    delay(100);
+    if (to > 0 &&( to < millis() - value)) {
+        sprintf_P(returns,tempn,-1);
+        return;
+    }
+  }
+  value = millis() - value;
+  sprintf_P(returns,tempn,value);
+}
+
 void digitalwrite(char* returns, JsonHashTable json, char* text) { 
-  char* command;
   int v1, v2;
 
   v1 = symbolRef(json,"pin");
@@ -66,9 +88,7 @@ void digitalwrite(char* returns, JsonHashTable json, char* text) {
 }
 
 void digitalread(char* returns, JsonHashTable json, char* text) { 
-  char* command;
   int v1, v2;
-  command = json.getString("command");
   v1 = symbolRef(json,"pin");
   v2 = getDigitalValue(v1);
   sprintf_P(returns,tempn,v2);
@@ -76,7 +96,6 @@ void digitalread(char* returns, JsonHashTable json, char* text) {
 }
 
 void analogwrite(char* returns, JsonHashTable json, char* text) { 
-  char* command;
   int v1, v2;
   v1 = symbolRef(json,"pin");
   v2 = symbolRef(json,"value");
@@ -85,7 +104,6 @@ void analogwrite(char* returns, JsonHashTable json, char* text) {
 }
 
 void analogread(char* returns, JsonHashTable json, char* text) { 
-  char* command;
   int v1, v2;
   v1 = symbolRef(json,"pin");
   v2 = getAnalogValue(v1);
@@ -129,7 +147,6 @@ void notify(char* returns, JsonHashTable json, char* text) {
 }
 
 void gotox(char* returns, JsonHashTable json, char* text) { 
-  char* command;
   int v1, v2;
     char* label = json.getString("where");
     if (json.containsKey("count")) {
@@ -154,7 +171,6 @@ void gotox(char* returns, JsonHashTable json, char* text) {
   }
   
 void printx(char* returns, JsonHashTable json, char* text) { 
-  char* command;
   char* value = json.getString("value");
   Serial.println("READY");
   sprintf_P(returns,iprint,value);
@@ -162,7 +178,6 @@ void printx(char* returns, JsonHashTable json, char* text) {
 }
 
 void call(char* returns, JsonHashTable json, char* text) { 
-  char* command;
   int v1, v2;
   char* fname = json.getString("function");
   char* param = json.getString("param");
@@ -487,8 +502,7 @@ void transmit(char* buf) {
    if (interface == PROXY) {
      Serial.print(buf);
    } else {
-      // client.write(buf,strlen(buf));
-      client.fastrprint(buf);
+     client.fastrprint(buf);
    }
 }
 

@@ -17,6 +17,8 @@
 // Use hardware SPI for the remaining pins
 // On an UNO, SCK = 13, MISO = 12, and MOSI = 11
 
+#define BUTTON_PIN 22
+
 // DIGITAL
 #define GREEN  4
 #define RED    6

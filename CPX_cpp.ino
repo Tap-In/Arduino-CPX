@@ -45,6 +45,7 @@ jumpTYPE jumps[8];
 langTYPE lang[] = {
   { "ping", &ping },
   {"auth", &auth }, 
+  {"trigger", &trigger }, 
   {"digitalwrite",&digitalwrite},
   {"digitalread",&digitalread},
   {"analogread",&analogread},
