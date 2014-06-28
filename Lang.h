@@ -47,7 +47,7 @@ void setimage(char* returns, JsonHashTable json, char* text);
 void seteeprom(char* returns, JsonHashTable json, char* text);
 void geteeprom(char* returns, JsonHashTable json, char* text);
 
-void sendCPmessage(char* plan, char* value, char* returns, int wait);
+void sendCPmessage(char* user, char* plan, char* args, char* endpoint, char* returns, int wait);
 int getJumpCount(char* label);
 int findFunction(char* name);
 int findIndex(char* label,JsonArray commands);

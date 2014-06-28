@@ -335,7 +335,7 @@ void loop() {
               transmit(send);
               free(json);;
               free(send);
-              while(client.available()) Serial.read();
+              while(client.available()) client.read();
               return;
           }
         }

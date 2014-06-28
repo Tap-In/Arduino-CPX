@@ -117,13 +117,14 @@ void delayx(char* returns, JsonHashTable json, char* text) {
 }
 
 void notify(char* returns, JsonHashTable json, char* text) { 
-  char* command;
-  int v1, v2;
   char returnsx[512];
+  char* user = json.getString("user");
   char* plan = json.getString("plan");
-  char* value = json.getString("value");
-  int wait = json.getLong("wait");
-  sendCPmessage(plan, value, returnsx, wait);
+  char* value = json.getString("args");
+  char* endpoint = json.getString("endpoint");
+  long wait = json.getLong("wait");
+  
+  sendCPmessage(user,plan, value, endpoint, returnsx, wait);
   sprintf_P(returns,temp,returns);
 }
 
@@ -175,12 +176,30 @@ void call(char* returns, JsonHashTable json, char* text) {
     }
   }
   
-void sendCPmessage(char* plan, char* value, char* returns, int wait) {
-  char* buf = (char*)malloc(sizeof(char)*512);
- // sprintf(buf,"{\"map\":{\"command\":\"notify\",,\"plan\":”%s\",\"value\": \"%s\"}}",
- //   auth,plan,value);
-  encode(buf);
-  transmit(buf);
+void sendCPmessage(char* user, char* plan, char* args, char* endpoint, char* returns, int wait) {
+  char* buf = (char*)malloc(sizeof(char)*1024);
+  
+  strcpy(buf,"{\"map\":{\"proxy-command\":\"notify\",\"user\":\"");
+  strcat(buf,user);
+  strcat(buf,"\",\"plan\":\"");
+  strcat(buf,plan);
+  strcat(buf,"\",\"args\":");
+  strcat(buf,args);
+  strcat(buf, ",\"endpoint\":\"");
+  strcat(buf,endpoint);
+  strcat(buf,"\"}}");
+  Serial.print("::"); Serial.println(buf);
+  char* send = encode(buf);
+  Serial.println(send);
+  transmit(send);
+  Serial.println("SENT!");
+  free(send);
+  free(buf);
+  if (wait == 0) {
+    returns[0] = 0;
+    return;
+  }
+  
   char* json = readBlock();
   if (json == NULL) {
     returns[0] = 0;
@@ -376,6 +395,7 @@ char* readBlock() {
   char len[4];
   char* buf;
   int sz = 0;
+  char returns[512];
   int value;
   for (int i=0;i<4;i++) {
     if (interface == PROXY) {
@@ -386,9 +406,10 @@ char* readBlock() {
      while(client.connected() && !client.available()) {
          if (z++ > 1000) {
            z = 0;
-           Serial.print("PING ");
-           client.write("!",1);
-           Serial.println(pingCount++);
+          Serial.print("PING ");
+          client.write("!",1);
+          Serial.println(pingCount++);
+          //sendCPmessage("xxx","yyy", "{}", "endpoiny", returns, 0);
     }
      }
      if (!client.connected()) {
@@ -466,7 +487,8 @@ void transmit(char* buf) {
    if (interface == PROXY) {
      Serial.print(buf);
    } else {
-      client.write(buf,strlen(buf));
+      // client.write(buf,strlen(buf));
+      client.fastrprint(buf);
    }
 }
 
