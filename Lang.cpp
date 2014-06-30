@@ -112,7 +112,7 @@ void geteeprom(char* returns, JsonHashTable json, char* text) {
   int v1, v2;
   v1 = symbolRef(json,"address");
   R = v2 = getEEPROM(v1);
-  sprintf_P(returns,temp,"ok");
+  sprintf_P(returns,tempn,v2);
   shift(json,v2);
 }
 
