@@ -77,6 +77,8 @@ int lamp(char*, char*);
 void construct(char*,char*[]);
 long lastTime;
 
+long R;
+
 void eepromString(int address) {
    byte n;
    while(true) {

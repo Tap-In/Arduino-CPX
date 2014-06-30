@@ -31,9 +31,9 @@ extern jumpTYPE jumps[];
 extern langTYPE lang[];
 extern callTYPE functions[];  
 extern symbolTYPE symbols[];
-extern int getRfid(char *data);
 extern int getEEPROM(int address);
 extern void setEEPROM(int address, int value);
+extern long R;
 
 int pingCount = 0;
 
@@ -57,10 +57,6 @@ void ping(char* returns, JsonHashTable json, char* text) {
 
 void trigger(char* returns, JsonHashTable json, char* text) { 
   
-  
-   sendCPmessage("ploh@tapinsystems.com", "53ab42aa484a85b5af000014", "{}", "http://demo1.tapinsystems.net:3000/runplan" , returns, 0);
-  
-  
   int pin = symbolRef(json,"pin");
   long to = symbolRef(json,"timeout");
   pinMode(pin, INPUT);
@@ -75,6 +71,7 @@ void trigger(char* returns, JsonHashTable json, char* text) {
     }
   }
   value = millis() - value;
+  R = value;
   sprintf_P(returns,tempn,value);
 }
 
@@ -90,7 +87,7 @@ void digitalwrite(char* returns, JsonHashTable json, char* text) {
 void digitalread(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
   v1 = symbolRef(json,"pin");
-  v2 = getDigitalValue(v1);
+  R = v2 = getDigitalValue(v1);
   sprintf_P(returns,tempn,v2);
   shift(json, v2);
 }
@@ -106,22 +103,22 @@ void analogwrite(char* returns, JsonHashTable json, char* text) {
 void analogread(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
   v1 = symbolRef(json,"pin");
-  v2 = getAnalogValue(v1);
+  R = v2 = getAnalogValue(v1);
   sprintf_P(returns,tempn,v2);
   shift(json, v2);
 }
 
 void geteeprom(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
-  v1 = symbolRef(json,"adress");
-  v2 = getEEPROM(v1);
+  v1 = symbolRef(json,"address");
+  R = v2 = getEEPROM(v1);
   sprintf_P(returns,temp,"ok");
   shift(json,v2);
 }
 
 void seteeprom(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
-  v1 = symbolRef(json,"adress");
+  v1 = symbolRef(json,"address");
   v2 = symbolRef(json,"value");
   setEEPROM(v1,v2);
   sprintf_P(returns,temp,"ok");
@@ -136,14 +133,14 @@ void delayx(char* returns, JsonHashTable json, char* text) {
 
 void notify(char* returns, JsonHashTable json, char* text) { 
   char returnsx[512];
-  char* user = json.getString("user");
+  char* user = json.getString("plan-user");
   char* plan = json.getString("plan");
   char* value = json.getString("args");
   char* endpoint = json.getString("endpoint");
   long wait = json.getLong("wait");
   
   sendCPmessage(user,plan, value, endpoint, returnsx, wait);
-  sprintf_P(returns,temp,returns);
+  sprintf_P(returns,temp,returnsx);
 }
 
 void gotox(char* returns, JsonHashTable json, char* text) { 
@@ -193,8 +190,9 @@ void call(char* returns, JsonHashTable json, char* text) {
   
 void sendCPmessage(char* user, char* plan, char* args, char* endpoint, char* returns, int wait) {
   char* buf = (char*)malloc(sizeof(char)*1024);
-  
-  strcpy(buf,"{\"map\":{\"proxy-command\":\"notify\",\"user\":\"");
+  char swait[16];
+  sprintf(swait,"%d",wait);
+  strcpy(buf,"{\"map\":{\"proxy-command\":\"notify\",\"plan-user\":\"");
   strcat(buf,user);
   strcat(buf,"\",\"plan\":\"");
   strcat(buf,plan);
@@ -202,24 +200,15 @@ void sendCPmessage(char* user, char* plan, char* args, char* endpoint, char* ret
   strcat(buf,args);
   strcat(buf, ",\"endpoint\":\"");
   strcat(buf,endpoint);
-  strcat(buf,"\"}}");
-  Serial.print("::"); Serial.println(buf);
+  strcat(buf,"\",\"wait\":");
+  strcat(buf,swait);
+  strcat(buf,"}}");
   char* send = encode(buf);
   Serial.println(send);
   transmit(send);
-  Serial.println("SENT!");
   free(send);
   free(buf);
-  if (wait == 0) {
-    returns[0] = 0;
-    return;
-  }
-  
-  char* json = readBlock();
-  if (json == NULL) {
-    returns[0] = 0;
-    return;
-  }
+  char *json = readBlock();
   strcpy(returns,json);
   free(json);
 }
@@ -424,7 +413,6 @@ char* readBlock() {
           Serial.print("PING ");
           client.write("!",1);
           Serial.println(pingCount++);
-          //sendCPmessage("xxx","yyy", "{}", "endpoiny", returns, 0);
     }
      }
      if (!client.connected()) {
@@ -496,13 +484,22 @@ char* encode(char* data) {
 
 /*
  * Send the response to either Serial or to the Wifi shield, depending
- * on how you have it set up.
+ * on how you have it set up. If WiFi send in little chunks so you don't
+ * overrun the C3000 transmit buffer.
  */
 void transmit(char* buf) {
    if (interface == PROXY) {
      Serial.print(buf);
    } else {
-     client.fastrprint(buf);
+     if (strlen(buf) > 60) {
+       char block[70];
+       for (int i = 0; i < strlen(buf); i+= 60) {
+         strncpy(block, buf+i,60);
+         block[60] = 0;
+         client.fastrprint(block);
+       }
+     } else
+       client.fastrprint(buf);
    }
 }
 
@@ -511,6 +508,9 @@ void transmit(char* buf) {
   */
 long symbolRef(JsonHashTable json, char* label) {
   long returns;
+  if (label == "R")
+    return R;
+    
   int index = json.getLong("index");
   if (json.isNumber(label)) {
     returns = json.getLong(label);
