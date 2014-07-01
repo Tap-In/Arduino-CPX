@@ -20,7 +20,6 @@
 #include "Config.h"
 
 extern JsonHashTable hashTable;
-//extern char* temp;;
 extern int interface;
 extern Adafruit_CC3000_Client client;
 extern int nJumps;
@@ -37,6 +36,9 @@ extern long R;
 
 int pingCount = 0;
 
+/**
+  * Sends the device authentication to the host.
+  */
 void auth(char* returns, JsonHashTable json, char* text) {
   boolean auth = json.getBool("value");
   if (auth == false) {
@@ -51,10 +53,18 @@ void auth(char* returns, JsonHashTable json, char* text) {
   returns[0] = 0;
 }
 
+/**
+  * Respond to a PING from the host.
+  */
 void ping(char* returns, JsonHashTable json, char* text) { 
     sprintf(returns,"{\"map\":{\"value\":%u},\"globals\":[]}",millis()/1000);
 }
 
+/**
+  * Wait here, and trigger on an event. Expects a pin to wait on; if timeout
+  * is 0, the trigger waits indefinitely, otherwise it waits the
+  * specified number of milliseconds.
+  */
 void trigger(char* returns, JsonHashTable json, char* text) { 
   
   int pin = symbolRef(json,"pin");
@@ -75,6 +85,10 @@ void trigger(char* returns, JsonHashTable json, char* text) {
   sprintf_P(returns,tempn,value);
 }
 
+/**
+  * Digital Write to a pin using the specified value.
+  */
+  
 void digitalwrite(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
 
@@ -84,6 +98,9 @@ void digitalwrite(char* returns, JsonHashTable json, char* text) {
   sprintf_P(returns,temp,"ok");
 }
 
+/**
+  * Read a digital pin. Expects a pin number.
+  */
 void digitalread(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
   v1 = symbolRef(json,"pin");
@@ -91,6 +108,10 @@ void digitalread(char* returns, JsonHashTable json, char* text) {
   sprintf_P(returns,tempn,v2);
   shift(json, v2);
 }
+
+/**
+  * Analog write, expects a pin number and a 0 or 1 as the value
+  */
 
 void analogwrite(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
@@ -100,6 +121,9 @@ void analogwrite(char* returns, JsonHashTable json, char* text) {
   sprintf_P(returns,temp,"ok");
 }
 
+/**
+  * Read an analog pin, expects a pin number.
+  */
 void analogread(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
   v1 = symbolRef(json,"pin");
@@ -108,6 +132,10 @@ void analogread(char* returns, JsonHashTable json, char* text) {
   shift(json, v2);
 }
 
+/**
+  * Return the value of an EEPROM address. Expects an address.
+  */
+  
 void geteeprom(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
   v1 = symbolRef(json,"address");
@@ -116,6 +144,9 @@ void geteeprom(char* returns, JsonHashTable json, char* text) {
   shift(json,v2);
 }
 
+/**
+  * Set EEPROM value. Sets address to value.
+  */
 void seteeprom(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
   v1 = symbolRef(json,"address");
@@ -124,12 +155,21 @@ void seteeprom(char* returns, JsonHashTable json, char* text) {
   sprintf_P(returns,temp,"ok");
 }
 
+/**
+  * Delay "value" number of milliseconds.
+  */
+  
 void delayx(char* returns, JsonHashTable json, char* text) { 
   int v1;
   v1 = symbolRef(json,"value");
   delay(v1);
   sprintf_P(returns,temp,"ok");
 }
+
+/**
+  * The control plan notification command. Expects plan-user.
+  * plan, args, and endpoint. See sendCPMessage for explanation.
+  */
 
 void notify(char* returns, JsonHashTable json, char* text) { 
   char returnsx[512];
@@ -143,6 +183,10 @@ void notify(char* returns, JsonHashTable json, char* text) {
   sprintf_P(returns,temp,returnsx);
 }
 
+/**
+  * The goto command, expects where, count and label. count is
+  * optional.
+  */
 void gotox(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
     char* label = json.getString("where");
@@ -167,6 +211,10 @@ void gotox(char* returns, JsonHashTable json, char* text) {
     sprintf_P(returns,temp,"ok");
   }
   
+/**
+  * Embedded print, prints on the USB console, not interpreted
+  * as a serial command to the host proxy.
+  */
 void printx(char* returns, JsonHashTable json, char* text) { 
   char* value = json.getString("value");
   Serial.println("READY");
@@ -174,6 +222,11 @@ void printx(char* returns, JsonHashTable json, char* text) {
   Serial.println("DONE");
 }
 
+/**
+  * Call a C function, giben the name, and the param. The param
+  * is given as a string, the C function must deal with the param
+  * as approrpriate.
+  */
 void call(char* returns, JsonHashTable json, char* text) { 
   int v1, v2;
   char* fname = json.getString("function");
@@ -188,6 +241,13 @@ void call(char* returns, JsonHashTable json, char* text) {
     }
   }
   
+/**
+  * Send control plan a message.
+  * User is the cplan's user name
+  * Plan is the plan id.
+  * Args is the JSON arguments expected by the plan.
+  * Endpoint is the HTTP address of the control plan server.
+  */
 void sendCPmessage(char* user, char* plan, char* args, char* endpoint, char* returns, int wait) {
   char* buf = (char*)malloc(sizeof(char)*1024);
   char swait[16];
@@ -221,6 +281,10 @@ int getJumpCount(char* label) {
   return -1;
 }
 
+/**
+  * Given the name of a symbol and it's start and stop address
+  * return the values as a list.
+  */
 void getimage(char* returns, JsonHashTable json, char* text) { 
   char* name = json.getString("name");
   int tSize;
@@ -259,6 +323,9 @@ void getimage(char* returns, JsonHashTable json, char* text) {
   sprintf_P(returns,temp,array);
 }
 
+/**
+  * Given a symbol name and index, return the value.
+  */
 long getValueAt(char* name, int index) {
   int k = findSymbol(name);
   long value;
@@ -277,6 +344,9 @@ long getValueAt(char* name, int index) {
   return value;
 }
 
+/**
+  * Returns the size of the symbol's base type.
+  */
 int getSize(int type) {
   switch(type) {
     case INT: return sizeof(int);
@@ -286,6 +356,10 @@ int getSize(int type) {
   return -1;
 }
 
+/**
+  * Set the arduino memory at a certain address to a list
+  * of values
+  */
 void setimage(char* returns, JsonHashTable json, char* text) { 
   char* name = json.getString("name");
   int tSize;
@@ -321,6 +395,10 @@ void setimage(char* returns, JsonHashTable json, char* text) {
   }
   sprintf_P(returns,temp,"ok");
 }
+
+/**
+  * Allocate memory on the Arduino and give it a name.
+  */
 
 void allocate(char* returns, JsonHashTable json, char* text) { 
   char* name = json.getString("name");
@@ -520,6 +598,9 @@ long symbolRef(JsonHashTable json, char* label) {
   return returns;
 }
 
+/**
+  * Shift a value into the named command
+  */
 void shift(JsonHashTable json, long value) {
    char* name = json.getString("shift");
    if (name == NULL)
