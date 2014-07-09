@@ -28,7 +28,21 @@
 #include "Config.h"
 #include "Hardware.h"
 
-////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////
+#define INTERFACE_TYPE       WIFI
+
+// If proxy these will be ignored
+#define CONTROL_PLAN_ADDR    "50.16.114.126"
+//#define CONTROL_PLAN_ADDR   "192.168.1.15"
+#define CONTROL_PLAN_PORT    6666
+////////////////////////////////////////////////////////////////
+
+#define WLAN_SECURITY        WLAN_SEC_WPA2
+char USER[] =               {"\"BEN\""};
+char ID[]   =               {"\"5551212\""};
+char WLAN_SSID[] =          {"SuperiorCourtData"};
+char WLAN_PASS[]  =         {"jiujitsu"};
+////////////////////////////////////////////////////////////////
 
 JsonParser<128> parser;
 JsonHashTable hashTable;
