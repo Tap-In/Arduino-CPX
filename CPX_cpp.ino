@@ -73,7 +73,8 @@ langTYPE lang[] = {
   {"getimage",&getimage},
   {"setimage", &setimage},
   {"seteeprom",&seteeprom},
-  {"geteeprom",&geteeprom}
+  {"geteeprom",&geteeprom},
+  {"send-callback", &callback}
 }; 
 callTYPE functions[8];         // a list of 8 possible functions
 symbolTYPE symbols[8];

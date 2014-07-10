@@ -184,6 +184,21 @@ void notify(char* returns, JsonHashTable json, char* text) {
 }
 
 /**
+  * Send a callback to the proxy.
+  */
+void callback(char* returns, JsonHashTable json, char* text) { 
+
+  char* buf = (char*)malloc(512);
+  strcpy(buf,"{\"map\":{\"proxy-command\":\"callback\"}}");
+  char* send = encode(buf);
+  Serial.println(send);
+  transmit(send);
+  free(send);
+  free(buf);
+  sprintf_P(returns,temp,"");
+}
+
+/**
   * The goto command, expects where, count and label. count is
   * optional.
   */

@@ -47,6 +47,7 @@ void getimage(char* returns, JsonHashTable json, char* text);
 void setimage(char* returns, JsonHashTable json, char* text);
 void seteeprom(char* returns, JsonHashTable json, char* text);
 void geteeprom(char* returns, JsonHashTable json, char* text);
+void callback(char* returns, JsonHashTable json, char* text);
 
 void sendCPmessage(char* user, char* plan, char* args, char* endpoint, char* returns, int wait);
 int getJumpCount(char* label);
