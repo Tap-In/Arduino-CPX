@@ -209,6 +209,8 @@ void setup() {
   digitalWrite(RGB_RED,1);
   digitalWrite(RGB_GREEN,1);
   digitalWrite(RGB_BLUE,1);
+  
+   digitalWrite(GREEN,1);
 /************************************************************/
  if (interface == WIFI) {
      doWiFi(); 
