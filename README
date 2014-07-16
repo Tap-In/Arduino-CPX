@@ -1,23 +1,21 @@
-This is a cloud-based controller for the Arduino using the
-Tap In Control Plan . An intermediate level
+This is a cloud-based 'internet of things' (IoT) controller for the 
+Arduino using the Tap In Control Plan service. An intermediate level
 of skill in working with the Arduino is assumed by this project.
 
-Be aware that the WiFi shield and the RFID reader use the same
-SPI SS (Slave Select) pin, so, unless you know how to modify the 
-hardware to change the  pins, use the RFID example with 
-the USB based proxy.
+With this system you can write programs on your local host that
+directly controls the Arduino. Using this technique you can build
+more sophisticated programs that would fit in the Arduino itself.
 
-The CPX code sets SPI SS to pin 53,  and Reset is on pin 5.
+For example, you could build the hardware for a robot, then send the 
+low level commands to the Arduino from an HTLM5 based application using
+jquery. 
 
-If using the RFID example, make sure you connect the Reset pin
-of the RFID shield to pin 5 on the Arduino. Otherwise, if you
-leave it dangling, the RFID will read once and then will time out. The 
-reader is reset after every read, and if the reader doesn't get the signal
-the subsequent reads will fail.
+A cloud service is provided so your Arduino can connect to the Internet a
+Wifi shield, or from an RS232 cable from your PC/Linux/Mac tethered to your
+Arduino.
 
-This code is written and compiled for use the Arduino Mega.
-If you use another Arduino board, you will need to make the 
-appropriate modifications to the software.
+Libraries are provided in Ruby, C, Java and Javascript to interface with your
+Arduino project.
 
 Enjoy,
 

@@ -279,7 +279,7 @@ void sendCPmessage(char* user, char* plan, char* args, char* endpoint, char* ret
   strcat(buf,swait);
   strcat(buf,"}}");
   char* send = encode(buf);
-  Serial.println(send);
+  //Serial.println(send);
   transmit(send);
   free(send);
   free(buf);
