@@ -28,19 +28,19 @@
 #include "Hardware.h"
 
 ////////////////////////////////////////////////////////////////
-#define INTERFACE_TYPE       PROXY
+#define INTERFACE_TYPE       WIFI
 
 // If proxy these will be ignored
-//#define CONTROL_PLAN_ADDR    "50.16.114.126"
-#define CONTROL_PLAN_ADDR   "192.168.1.15"
+#define CONTROL_PLAN_ADDR    "50.16.114.126"
+//#define CONTROL_PLAN_ADDR   "192.168.1.15"
 #define CONTROL_PLAN_PORT    6666
 ////////////////////////////////////////////////////////////////
 
 #define WLAN_SECURITY        WLAN_SEC_WPA2
 char USER[] =               {"\"BEN\""};
 char ID[]   =               {"\"5551212\""};
-char WLAN_SSID[] =          {"SuperiorCourtData"};
-char WLAN_PASS[]  =         {"jiujitsu"};
+char WLAN_SSID[] =          {"BenNet"};
+char WLAN_PASS[]  =         {"6666666666"};
 ////////////////////////////////////////////////////////////////
 
 JsonParser<128> parser;
@@ -89,6 +89,7 @@ void doCommand(char* returns, JsonHashTable json, char* label);
 int testme(char*, char*);           // a sample internal function
 int lamp(char*, char*);
 void construct(char*,char*[]);
+uint32_t getIp(char *address) ;
 long lastTime;
 
 long R;
@@ -157,12 +158,12 @@ void post() {
 }
 void setup() {
   Serial.begin(19200);
+  char returns[512];
   
   SPI.begin();
- // post();
   
+  fade(returns,"1");
   lastTime = millis();
-  char returns[512];
   strcpy(functions[0].name,"testme");
   functions[0].functionPtr = testme;
   strcpy(functions[1].name,"lamp");
@@ -171,7 +172,7 @@ void setup() {
   functions[2].functionPtr = fade;
   nFuncs = 3;
  
-  
+
   // RGB SETUP
   pinMode(RGB_GREEN, OUTPUT);
   pinMode(RGB_BLUE, OUTPUT);
@@ -199,20 +200,20 @@ void setup() {
       mode = 1;
       
   }
-  digitalWrite(RED,0);
+  digitalWrite(RED,1);
   digitalWrite(GREEN,0);
   
-   
-  fade(returns,"1");
+  doWiFi();
+  digitalWrite(RED,0);
+  digitalWrite(GREEN,1);
   delay(200);
   digitalWrite(RGB_RED,1);
   digitalWrite(RGB_GREEN,1);
   digitalWrite(RGB_BLUE,1);
   
-   digitalWrite(GREEN,1);
+  digitalWrite(GREEN,1);
 /************************************************************/
  if (interface == WIFI) {
-     doWiFi(); 
      Serial.println("CPX .1 started");
      char* values[] = {"\"user\"",USER,"\"id\"",ID,0};
      construct(returns,values);
@@ -246,7 +247,9 @@ void construct(char* returns,char *vals[]) {
 }
 
 void doWiFi() {
-if (!cc3000.begin())
+  if (interface != WIFI)
+    return;
+  if (!cc3000.begin())
   {
     Serial.println(F("CC3000 Couldn't begin(, hardware error"));
     while(1);
@@ -272,8 +275,7 @@ if (!cc3000.begin())
   
    // Try looking up the website's IP address
   
-  uint32_t ip;
-  cc3000.getHostByName(CONTROL_PLAN_ADDR, &ip);
+  uint32_t ip = getIp(CONTROL_PLAN_ADDR);
   
   Serial.print(F("Connecting to ")); Serial.print(CONTROL_PLAN_ADDR); Serial.print("... ");
   while(true) {
@@ -487,6 +489,30 @@ void sendPing() {
     lastTime = millis();
   }
 }
+
+uint32_t getIp(char *address) {
+  uint32_t ip = 0;
+  int k = 0;
+  while (ip == 0) {
+    if (! cc3000.getHostByName(address, &ip)) {
+      Serial.println(F("Couldn't resolve, using dotted decimal"));
+    }
+    delay(500);
+    if (k++ > 20)
+      break;
+  }
+  if (k < 20)
+    return ip;
+  
+  uint8_t a, b, c, d;
+  k = sscanf(address,"%u.%u.%u.%u",&a,&b,&c,&d);
+  ip = a;
+  ip = ip << 8 | b;
+  ip = ip << 8 | c;
+  ip = ip << 8 | d;
+  return ip;
+}
+
 
 
 
