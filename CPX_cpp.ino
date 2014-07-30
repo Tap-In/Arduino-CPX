@@ -39,8 +39,8 @@
 #define WLAN_SECURITY        WLAN_SEC_WPA2
 char USER[] =               {"\"BEN\""};
 char ID[]   =               {"\"5551212\""};
-char WLAN_SSID[] =          {"BenNet"};
-char WLAN_PASS[]  =         {"6666666666"};
+char WLAN_SSID[] =          {"SuperiorCourtData"};
+char WLAN_PASS[]  =         {"jiujitsu"};
 ////////////////////////////////////////////////////////////////
 
 JsonParser<128> parser;
