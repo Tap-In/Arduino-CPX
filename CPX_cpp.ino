@@ -28,16 +28,17 @@
 #include "Hardware.h"
 
 ////////////////////////////////////////////////////////////////
-#define INTERFACE_TYPE       WIFI
+#define INTERFACE_TYPE       PROXY
 
 // If proxy these will be ignored
 #define CONTROL_PLAN_ADDR    "50.16.114.126"
 //#define CONTROL_PLAN_ADDR   "192.168.1.15"
+//#define CONTROL_PLAN_ADDR   "192.168.1.3"
 #define CONTROL_PLAN_PORT    6666
 ////////////////////////////////////////////////////////////////
 
 #define WLAN_SECURITY        WLAN_SEC_WPA2
-char USER[] =               {"\"BEN\""};
+char USER[] =               {"\"ploh@tapinsystems.com\""};
 char ID[]   =               {"\"5551212\""};
 char WLAN_SSID[] =          {"SuperiorCourtData"};
 char WLAN_PASS[]  =         {"jiujitsu"};
@@ -493,24 +494,32 @@ void sendPing() {
 uint32_t getIp(char *address) {
   uint32_t ip = 0;
   int k = 0;
-  while (ip == 0) {
-    if (! cc3000.getHostByName(address, &ip)) {
-      Serial.println(F("Couldn't resolve, using dotted decimal"));
-    }
-    delay(500);
-    if (k++ > 20)
-      break;
-  }
-  if (k < 20)
-    return ip;
   
   uint8_t a, b, c, d;
   k = sscanf(address,"%u.%u.%u.%u",&a,&b,&c,&d);
-  ip = a;
-  ip = ip << 8 | b;
-  ip = ip << 8 | c;
-  ip = ip << 8 | d;
-  return ip;
+  if (k == 4) {
+    ip = a;
+    ip = ip << 8 | b;
+    ip = ip << 8 | c;
+    ip = ip << 8 | d;
+    Serial.print("Remote IP address: "); Serial.print(ip); Serial.println();
+    return ip;
+  } else {
+    while (ip == 0) {
+      if (! cc3000.getHostByName(address, &ip)) {
+        Serial.println(F("Couldn't resolve, using dotted decimal"));
+      }
+      delay(500);
+      if (k++ > 20)
+        break;
+    }
+  }
+  if (k < 20) {
+     Serial.print("Remote IP address: "); Serial.print(ip); Serial.println();
+    return ip;
+  }
+  Serial.println("IP address resolution failed, Halt!");
+  while(true);
 }
 
 
