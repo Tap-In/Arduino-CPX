@@ -28,7 +28,7 @@
 #include "Hardware.h"
 
 ////////////////////////////////////////////////////////////////
-#define INTERFACE_TYPE       PROXY
+#define INTERFACE_TYPE       WIFI
 
 // If proxy these will be ignored
 #define CONTROL_PLAN_ADDR    "50.16.114.126"
@@ -38,7 +38,7 @@
 ////////////////////////////////////////////////////////////////
 
 #define WLAN_SECURITY        WLAN_SEC_WPA2
-char USER[] =               {"\"ploh@tapinsystems.com\""};
+char USER[] =               {"\"BEN\""};
 char ID[]   =               {"\"5551212\""};
 char WLAN_SSID[] =          {"SuperiorCourtData"};
 char WLAN_PASS[]  =         {"jiujitsu"};
@@ -495,13 +495,20 @@ uint32_t getIp(char *address) {
   uint32_t ip = 0;
   int k = 0;
   
-  uint8_t a, b, c, d;
+  int a, b, c, d;
   k = sscanf(address,"%u.%u.%u.%u",&a,&b,&c,&d);
   if (k == 4) {
     ip = a;
     ip = ip << 8 | b;
     ip = ip << 8 | c;
     ip = ip << 8 | d;
+    
+    Serial.print("A = " ); Serial.println(a);
+    Serial.print("B = " ); Serial.println(b);
+    Serial.print("C = " ); Serial.println(c);
+    Serial.print("D = " ); Serial.println(d);
+
+    
     Serial.print("Remote IP address: "); Serial.print(ip); Serial.println();
     return ip;
   } else {
