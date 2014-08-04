@@ -158,11 +158,19 @@ void post() {
   }    
 }
 void setup() {
+  
+  pinMode(RED,OUTPUT);
+  pinMode(GREEN,OUTPUT);
+  digitalWrite(RED,0);
+  digitalWrite(GREEN,1);
+  delay(100);
+  
   Serial.begin(19200);
   char returns[512];
   
   SPI.begin();
   
+  digitalWrite(GREEN,0);
   fade(returns,"1");
   lastTime = millis();
   strcpy(functions[0].name,"testme");
@@ -182,9 +190,6 @@ void setup() {
   digitalWrite(RGB_BLUE, HIGH);
   digitalWrite(RGB_RED, HIGH);
   ///////////////////////////////////////////////////
-  
-  pinMode(RED,OUTPUT);
-  pinMode(GREEN,OUTPUT);
   
   
 /*
