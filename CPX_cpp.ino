@@ -28,20 +28,20 @@
 #include "Hardware.h"
 
 ////////////////////////////////////////////////////////////////
-#define INTERFACE_TYPE       WIFI
+int INTERFACE_TYPE  =       WIFI;
 
 // If proxy these will be ignored
-#define CONTROL_PLAN_ADDR    "50.16.114.126"
+//#define CONTROL_PLAN_ADDR    "50.16.114.126"
 //#define CONTROL_PLAN_ADDR   "192.168.1.15"
-//#define CONTROL_PLAN_ADDR   "192.168.1.3"
+#define CONTROL_PLAN_ADDR   "192.168.1.3"
 #define CONTROL_PLAN_PORT    6666
 ////////////////////////////////////////////////////////////////
 
 #define WLAN_SECURITY        WLAN_SEC_WPA2
-char USER[] =               {"\"BEN\""};
-char ID[]   =               {"\"5551212\""};
-char WLAN_SSID[] =          {"SuperiorCourtData"};
-char WLAN_PASS[]  =         {"jiujitsu"};
+char USER[32] =               {"BEN"};
+char ID[32]   =               {"5551212"};
+char WLAN_SSID[32] =          {"SuperiorCourtData"};
+char WLAN_PASS[32]  =         {"jiujitsu"};
 ////////////////////////////////////////////////////////////////
 
 JsonParser<128> parser;
@@ -95,80 +95,25 @@ long lastTime;
 
 long R;
 
-void eepromString(int address) {
-   byte n;
-   while(true) {
-    if (Serial.available()) {
-      n=Serial.read();
-      if (n == '!')
-        break;
-      EEPROM.write(address++,n);
-    }
-  }
-  EEPROM.write(address,0);
-}
-
-void writeString(int address, char *s) {
-   int n = 0;
-   for (int i=address; i < address+16;i++) {
-      EEPROM.write(i,s[n]);
-      if (s[n] == 0) 
-        return;
-    }
-  }
-
-void eepromPrint(int address) {
-  byte n;
-  while(true) {
-    n = EEPROM.read(address++);
-    if (n != 0) {
-      Serial.write(n);
-    }
-    else
-      break;
-  }
-  Serial.println();
-}
-
-void post() {
-  if (EEPROM.read(0) == 255) {
-    writeString(0,USER);
-    writeString(16,ID);
-    if (INTERFACE_TYPE == WIFI) {
-      writeString(32,WLAN_SSID);
-      writeString(48,WLAN_PASS);
-    }    
-  }
-  Serial.print("User name: ");  
-  eepromString(0);
-  eepromPrint(0);
-  
-  Serial.print("Device id: ");  
-  eepromString(16);
-  eepromPrint(16);
-  
-  if (INTERFACE_TYPE == WIFI) {
-    Serial.print("SSID: ");  
-    eepromString(32);
-    eepromPrint(32);
-    
-    Serial.print("Password: ");  
-    eepromString(48);
-    eepromPrint(48);
-  }    
-}
 void setup() {
   
   pinMode(RED,OUTPUT);
   pinMode(GREEN,OUTPUT);
+  SPI.begin();
+  Serial.begin(19200);
+  
+  
+  for (int i=0;i<256;i++)
+    EEPROM.write(i,0);
+    
+  readConfigFromProm();
+  
+  
   digitalWrite(RED,0);
   digitalWrite(GREEN,1);
   delay(100);
   
-  Serial.begin(19200);
   char returns[512];
-  
-  SPI.begin();
   
   digitalWrite(GREEN,0);
   fade(returns,"1");
@@ -221,9 +166,11 @@ void setup() {
 /************************************************************/
  if (interface == WIFI) {
      Serial.println("CPX .1 started");
-     char* values[] = {"\"user\"",USER,"\"id\"",ID,0};
-     construct(returns,values);
-     char *send = encode(returns);
+     char* values[] = {"\"user\"","\"",USER,"\"","\"id\"","\"",ID,"\""};
+     char buf[128];
+     sprintf(buf,"{\"map\":{\"user\":\"%s\",\"id\":\"%s\"}}",USER,ID);
+     //construct(returns,values);
+     char *send = encode(buf);
      Serial.println(send);
      transmit(send);
      free(send);

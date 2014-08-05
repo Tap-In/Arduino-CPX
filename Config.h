@@ -1,4 +1,5 @@
 
+void readConfigFromProm() ;
 
 #define WIFI   1
 #define PROXY  0
