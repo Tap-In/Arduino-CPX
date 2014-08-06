@@ -26,14 +26,15 @@
 #include "Lang.h"
 #include "Config.h"
 #include "Hardware.h"
+#include "List.h"
 
 ////////////////////////////////////////////////////////////////
 int INTERFACE_TYPE  =       WIFI;
 
 // If proxy these will be ignored
-#define CONTROL_PLAN_ADDR    "50.16.114.126"
+//#define CONTROL_PLAN_ADDR    "50.16.114.126"
 //#define CONTROL_PLAN_ADDR   "192.168.1.15"
-//#define CONTROL_PLAN_ADDR   "192.168.1.3"
+#define CONTROL_PLAN_ADDR   "192.168.1.3"
 #define CONTROL_PLAN_PORT    6666
 ////////////////////////////////////////////////////////////////
 
@@ -56,7 +57,7 @@ int nJumps = 0;
 int nFuncs = 0;
 int nSym = 0;
 jumpTYPE jumps[8];
-langTYPE lang[] = {
+/* langTYPE lang[] = {
   { "ping", &ping },
   {"auth", &auth }, 
   {"trigger", &trigger }, 
@@ -75,13 +76,17 @@ langTYPE lang[] = {
   {"seteeprom",&seteeprom},
   {"geteeprom",&geteeprom},
   {"send-callback", &callback}
-}; 
+};  */
+
+List* keywords =  List_create();
+
 callTYPE functions[8];         // a list of 8 possible functions
 symbolTYPE symbols[8];
 
 /*
  * Internal functions of the CPX
  */
+langTYPE* initKey(char* word,  void (*functionPtr)(char* returns, JsonHashTable json, char* text));
 void doWiFi();
 bool displayConnectionDetails(void);
 int getRfid(char *data);
@@ -95,6 +100,36 @@ long lastTime;
 
 long R;
 
+void injectKeyWords() {
+  List_push(keywords,initKey((char*)"ping", &ping));
+  List_push(keywords,initKey((char*)"auth", &auth));
+  List_push(keywords,initKey((char*)"trigger", &trigger));
+  List_push(keywords,initKey((char*)"digitalwrite",&digitalwrite));
+  List_push(keywords,initKey((char*)"digitalread",&digitalread));
+  List_push(keywords,initKey((char*)"analogread",&analogread));
+  List_push(keywords,initKey((char*)"analogwrite",&analogwrite));
+  List_push(keywords,initKey((char*)"delay", &delayx));
+  List_push(keywords,initKey((char*)"notify",&notify));
+  List_push(keywords,initKey((char*)"goto",&gotox));
+  List_push(keywords,initKey((char*)"print", &printx));
+  List_push(keywords,initKey((char*)"call",&call));
+  List_push(keywords,initKey((char*)"allocate", &allocate));
+  List_push(keywords,initKey((char*)"getimage",&getimage));
+  List_push(keywords,initKey((char*)"setimage", &setimage));
+  List_push(keywords,initKey((char*)"seteeprom",&seteeprom));
+  List_push(keywords,initKey((char*)"geteeprom",&geteeprom));
+  List_push(keywords,initKey((char*)"send-callback", &callback));
+}
+
+//(*functionPtr)(void*)
+langTYPE* initKey(char* word,  void (*functionPtr)(char* returns, JsonHashTable json, char* text))
+{
+  langTYPE *key = (langTYPE*)malloc(sizeof(langTYPE));
+  strcpy(key->name, word);
+  key->functionPtr = functionPtr;
+  return key;
+}
+
 void setup() {
   
   pinMode(RED,OUTPUT);
@@ -102,10 +137,7 @@ void setup() {
   SPI.begin();
   Serial.begin(19200);
   
-  
-  for (int i=0;i<256;i++)
-    EEPROM.write(i,0);
-    
+  injectKeyWords();
   readConfigFromProm();
   
   
@@ -295,7 +327,7 @@ void loop() {
         if (interface == PROXY) {
           if (Serial.available()) { 
               inter = 1;
-              char* send = encode("{\"map\":{\"value\":\"ok\"},\"globals\":[]}");      
+              char* send = encode("{\"map\":{\"value\":\"interrupt\"},\"globals\":[]}");      
               transmit(send);
               free(json);;
               free(send);
@@ -305,7 +337,7 @@ void loop() {
         } else {
           if (client.available()) {
               inter = 1;
-              char* send = encode("{\"map\":{\"value\":\"ok\"},\"globals\":[]}"); 
+              char* send = encode("{\"map\":{\"value\":\"interrupt\"},\"globals\":[]}"); 
               transmit(send);
               free(json);;
               free(send);
@@ -362,14 +394,16 @@ void doCommand(char* returns, JsonHashTable json, char* text) {
      sprintf_P(returns,err,"badly formed command"); 
      return;
   }
-  langTYPE* l = lang;
-  while(l != 0) {
-    if (strcmp(l->name,command)==0) {
-      l->functionPtr(returns,json,text);
+  for (int i = 0; i < List_size(keywords); i++) {
+    langTYPE* key = (langTYPE*)List_query(keywords, i);
+    if (strcmp(key->name, command) == 0)
+    {
+      key->functionPtr(returns,json,text);
       return;
     }
-    l++;
   }
+  
+  
   sprintf_P(returns,err,"unknown command"); 
 }
 
