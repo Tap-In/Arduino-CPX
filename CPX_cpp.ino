@@ -32,9 +32,9 @@
 int INTERFACE_TYPE  =       WIFI;
 
 // If proxy these will be ignored
-//#define CONTROL_PLAN_ADDR    "50.16.114.126"
+#define CONTROL_PLAN_ADDR    "50.16.114.126"
 //#define CONTROL_PLAN_ADDR   "192.168.1.15"
-#define CONTROL_PLAN_ADDR   "192.168.1.3"
+//#define CONTROL_PLAN_ADDR   "192.168.1.3"
 #define CONTROL_PLAN_PORT    6666
 ////////////////////////////////////////////////////////////////
 
